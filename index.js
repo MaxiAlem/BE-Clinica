@@ -8,10 +8,26 @@ const PORT = process.env.PORT || 3000;
 const URL = process.env.URL
 // Middlewares
 
-app.use(cors({
-    origin: URL , // Reemplaza esto con la URL de tu frontend
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type, Authorization' // Encabezados permitidos
+// app.use(cors({
+//     origin: URL , // Reemplaza esto con la URL de tu frontend
+//     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+//     allowedHeaders: 'Content-Type, Authorization' // Encabezados permitidos
+//   }));
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'https://clinicatrinidad.org',
+    'https://www.clinicatrinidad.org'
+  ];
+  
+  app.use(cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true
   }));
 app.use(express.json());
 
