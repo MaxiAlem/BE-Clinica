@@ -26,4 +26,4 @@ jobs:
           git pull;
           npm ci;
           NODE_ENV=production npm run build || echo "Sin build step para backend";
-          pm2 restart backend || pm2 start npm --name "backend" -- run start;
+          pm2 restart trinidad-back || pm2 start npm --name "trinidad-back" -- run start;
