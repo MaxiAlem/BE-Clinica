@@ -1,0 +1,29 @@
+name: Backend Auto Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Backend to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: SSH and deploy
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          cd ${{ secrets.BACKEND_WORK_DIR }};
+          git fetch;
+          git checkout -f ${{ secrets.MAIN_BRANCH }};
+          git pull;
+          npm ci;
+          NODE_ENV=production npm run build || echo "Sin build step para backend";
+          pm2 restart backend || pm2 start npm --name "backend" -- run start;
