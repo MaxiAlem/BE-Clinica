@@ -66,6 +66,10 @@ Profesional.associate = (models) => {
     foreignKey: 'profesionalId',
     as: 'disponibilidades'
   });
+  Profesional.hasMany(models.Turno, {
+    foreignKey: 'profesionalId',
+    as: 'turnos'
+  });
 };
 
 Profesional.beforeCreate(async (profesional, options) => {

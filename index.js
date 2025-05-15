@@ -15,6 +15,7 @@ const URL = process.env.URL
 //   }));
   const allowedOrigins = [
     'http://localhost:3000',
+    'http://localhost:5173',
     'https://clinicatrinidad.org',
     'https://www.clinicatrinidad.org'
   ];
@@ -32,7 +33,8 @@ const URL = process.env.URL
 app.use(express.json());
 
 // Rutas
-app.use('/', routes);
+// app.use('/api', routes); para local
+app.use('/', routes); //para servidor
 
 
 app.listen(PORT, async () => {

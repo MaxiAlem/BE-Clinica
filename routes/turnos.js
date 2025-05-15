@@ -1,14 +1,29 @@
 import express from 'express';
-const router = express.Router();
+import {
+  crearTurno,
+  obtenerTurnos,
+  obtenerTurnoPorId,
+  actualizarTurno,
+  eliminarTurno,
+  restaurarTurno,
+  obtenerTurnosPorPaciente,
+  obtenerTurnosPorProfesional,
+  obtenerTurnosPorDia
+} from '../controllers/turnoController.js';
 
-// Ruta para obtener todos los turnos
-router.get('/', (req, res) => {
-  res.json({ message: 'Aquí se listan todos los turnos' });
-});
+const turnoRouter = express.Router();
 
-// Ruta para crear un nuevo turno
-router.post('/', (req, res) => {
-  res.json({ message: 'Nuevo turno creado' });
-});
+// CRUD principal
+turnoRouter.post('/', crearTurno);
+turnoRouter.get('/', obtenerTurnos); // todos los turnos  
+turnoRouter.get('/:id', obtenerTurnoPorId);
+turnoRouter.put('/:id', actualizarTurno);
+turnoRouter.delete('/:id', eliminarTurno);
+turnoRouter.post('/:id/restaurar', restaurarTurno);
 
-export default router;
+// Filtrados
+turnoRouter.get('/paciente/:pacienteId', obtenerTurnosPorPaciente);
+turnoRouter.get('/profesional/:profesionalId', obtenerTurnosPorProfesional);
+turnoRouter.get('/fecha/dia', obtenerTurnosPorDia); // requiere ?fecha=YYYY-MM-DD
+
+export default turnoRouter;
