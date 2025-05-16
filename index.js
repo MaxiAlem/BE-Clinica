@@ -66,4 +66,11 @@ process.on('exit', (code) => {
   console.log(`Proceso terminado con código: ${code}`);
 });
 
+process.on('SIGINT', () => {
+  console.log('Recibido SIGINT, no voy a salir automáticamente');
+  // NO hacer process.exit(0) aquí para evitar reinicios
+});
 
+process.on('exit', (code) => {
+  console.log('Proceso saliendo con código:', code);
+});
