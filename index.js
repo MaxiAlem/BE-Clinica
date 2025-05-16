@@ -33,8 +33,8 @@ const URL = process.env.URL
 app.use(express.json());
 
 // Rutas
- app.use('/api', routes);// para local
-//app.use('/', routes); //para servidor
+//app.use('/api', routes);// para local
+app.use('/', routes); //para servidor
 
 
 app.listen(PORT, async () => {
@@ -48,3 +48,22 @@ app.listen(PORT, async () => {
     console.error('No se pudo conectar a la base de datos :', error);
   }
 });
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('SIGINT', () => {
+  console.log('Proceso recibido SIGINT (Ctrl+C o kill). Cerrando...');
+  process.exit(0);
+});
+
+process.on('exit', (code) => {
+  console.log(`Proceso terminado con código: ${code}`);
+});
+
+
