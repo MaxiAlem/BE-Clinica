@@ -33,8 +33,8 @@ const URL = process.env.URL
 app.use(express.json());
 
 // Rutas
- //app.use('/api', routes);// para local
-app.use('/', routes); //para servidor
+ app.use('/api', routes);// para local
+//app.use('/', routes); //para servidor
 
 
 app.listen(PORT, async () => {
