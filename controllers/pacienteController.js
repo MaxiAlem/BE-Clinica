@@ -46,6 +46,27 @@ export const obtenerPacientePorId = async (req, res) => {
 };
 
 /**
+ * Obtener un paciente por dni
+ */
+export const obtenerPacientePorDNI = async (req, res) => {
+  try {
+    const { dni } = req.params;
+    console.log("DNI recibido:", dni);
+
+    const pacientes = await Paciente.findAll();
+    console.log("Pacientes en DB:", pacientes.map(p => p.dni));
+    const paciente = await Paciente.findOne({ where: { dni: Number(dni) } });
+    if (!paciente) {
+      return res.status(404).json({ error: 'Paciente no encontrado' });
+    }
+
+    res.json(paciente);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
  * Actualizar un paciente
  */
 export const actualizarPaciente = async (req, res) => {

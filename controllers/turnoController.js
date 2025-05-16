@@ -21,7 +21,13 @@ export const crearTurno = async (req, res) => {
 export const obtenerTurnos = async (req, res) => {
   try {
     const turnos = await Turno.findAll({
-      include: [Paciente, Profesional]
+      include: [{
+        model: Paciente,
+        as: 'Paciente'  // IMPORTANTE usar el alias aquí
+      },{
+        model: Profesional,
+        as: 'Profesional'  // IMPORTANTE usar el alias aquí
+      },]
     });
     res.json(turnos);
   } catch (err) {
@@ -35,8 +41,12 @@ export const obtenerTurnos = async (req, res) => {
 export const obtenerTurnoPorId = async (req, res) => {
   try {
     const turno = await Turno.findByPk(req.params.id, {
-      include: [Paciente, Profesional]
+      include: [
+        { model: Paciente, as: 'Paciente' },
+        { model: Profesional, as: 'Profesional' }
+      ]
     });
+    
 
     if (!turno) {
       return res.status(404).json({ error: 'Turno no encontrado' });
@@ -56,7 +66,9 @@ export const obtenerTurnosPorPaciente = async (req, res) => {
     const { pacienteId } = req.params;
     const turnos = await Turno.findAll({
       where: { pacienteId },
-      include: [Profesional]
+      include: [
+        { model: Profesional, as: 'Profesional' }
+      ]
     });
     res.json(turnos);
   } catch (err) {
@@ -67,12 +79,17 @@ export const obtenerTurnosPorPaciente = async (req, res) => {
 /**
  * Obtener turnos por profesional ID
  */
-export const obtenerTurnosPorProfesional = async (req, res) => {
+ export const obtenerTurnosPorProfesional = async (req, res) => {
   try {
     const { profesionalId } = req.params;
     const turnos = await Turno.findAll({
       where: { profesionalId },
-      include: [Paciente]
+      include: [
+        {
+          model: Paciente,
+          as: 'Paciente'  // <-- ACA el alias exacto
+        }
+      ]
     });
     res.json(turnos);
   } catch (err) {

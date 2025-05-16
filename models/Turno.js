@@ -66,8 +66,8 @@ const Turno = sequelize.define('Turno', {
 // Asociaciones que haríamos (asumiendo que ya definiste Paciente y Profesional)
 
 Turno.associate = (models) => {
-  Turno.belongsTo(models.Paciente, { foreignKey: 'pacienteId', as: 'paciente' });
-  Turno.belongsTo(models.Profesional, { foreignKey: 'profesionalId', as: 'profesional' });
+  Turno.belongsTo(models.Paciente, { foreignKey: 'pacienteId', as: 'Paciente' });
+  Turno.belongsTo(models.Profesional, { foreignKey: 'profesionalId', as: 'Profesional' });
 };
 
 export default Turno;
