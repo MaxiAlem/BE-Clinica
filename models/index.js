@@ -6,14 +6,20 @@ import Profesional from './Profesional.js';
 import Disponibilidad from './Disponibilidad.js';
 import Turno from './Turno.js';
 import Paciente from './Paciente.js';
+import ObraSocial from './ObraSocial.js';
+import Especialidad from './Especialidad.js';
 
+//import seedObrasSociales from '../seeders/22052025-obras-sociales.js';
+//import seedEspecialidades from '../seeders/22052025-especialidades.js';
 // Agrupar modelos para facilitar las asociaciones
 const models = {
   Usuario,
   Profesional,
   Disponibilidad,
   Turno,
-  Paciente
+  Paciente,
+  ObraSocial,
+  Especialidad
 };
 
 // Ejecutar las asociaciones
@@ -27,8 +33,9 @@ Object.values(models).forEach((model) => {
 const syncModels = async () => {
   try {
     // Sincronizamos todos los modelos
-    await sequelize.sync({ alter: false }); // O false si ya está todo bien
-
+    await sequelize.sync({ alter: true }); // O false si ya está todo bien
+  //  await seedObrasSociales();
+   // await seedEspecialidades()
     console.log('Modelos sincronizados con la base de datos');
   } catch (error) {
     console.error('Error al sincronizar modelos con la base de datos:', error);

@@ -25,10 +25,14 @@ const Profesional = sequelize.define('Profesional', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  especialidad: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
+  especialidadId: {
+       type: DataTypes.INTEGER,
+       allowNull: false,
+       references: {
+         model: 'especialidades',
+         key: 'id',
+       },
+     },
   titulo: {
     type: DataTypes.STRING, // Este campo es opcional
     allowNull: true
@@ -70,6 +74,10 @@ Profesional.associate = (models) => {
     foreignKey: 'profesionalId',
     as: 'turnos'
   });
+   Profesional.belongsTo(models.Especialidad, {
+       foreignKey: 'especialidadId',
+       as: 'especialidad'
+    });
 };
 
 Profesional.beforeCreate(async (profesional, options) => {

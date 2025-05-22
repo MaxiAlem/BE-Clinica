@@ -3,6 +3,8 @@ import usuarioRouter from './usuarios.js';
 import profesionalRouter from './profesionales.js';
 import pacienteRouter from './pacientes.js';
 import turnoRouter from './turnos.js';
+import obraSocialRouter from './obraSocial.js';
+import especialidadRouter from './especialidades.js';
 import { login } from '../controllers/authController.js';
 
 const router = express.Router();
@@ -16,7 +18,9 @@ router.post('/login', login);
 router.use('/usuarios', usuarioRouter);
 router.use('/profesionales', profesionalRouter);
 router.use('/pacientes', pacienteRouter)
-router.use('/turnos', turnoRouter)
+router.use('/turnos', turnoRouter);
+router.use('/obras-sociales', obraSocialRouter);
+router.use('/especialidad', especialidadRouter)
 
 
 export default router;

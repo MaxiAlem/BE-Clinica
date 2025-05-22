@@ -33,10 +33,6 @@ const Paciente = sequelize.define('Paciente', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
-  obraSocial: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
   dni: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -58,6 +54,14 @@ const Paciente = sequelize.define('Paciente', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+  obraSocialId: {
+    type: DataTypes.INTEGER,
+    references: {
+      model: 'obras_sociales',
+      key: 'id',
+    },
+    allowNull: true,
+  },
 }, {
   paranoid: true, // Para borrado lógico (deletedAt)
   timestamps: true, // createdAt, updatedAt
@@ -69,6 +73,10 @@ Paciente.associate = (models) => {
   Paciente.hasMany(models.Turno, {
     foreignKey: 'pacienteId',
     as: 'turnos',
+  });
+  Paciente.belongsTo(models.ObraSocial, {
+    foreignKey: 'obraSocialId',
+    as: 'obraSocial',
   });
 };
 
