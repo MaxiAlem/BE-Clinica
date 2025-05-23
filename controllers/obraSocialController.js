@@ -12,13 +12,15 @@ export const crearObraSocial = async (req, res) => {
 
 export const obtenerObrasSociales = async (req, res) => {
   try {
-    const obrasSociales = await ObraSocial.findAll();
-    res.status(200).json(obrasSociales);
+    const obrasSociales = await ObraSocial.findAll({
+      order: [['nombre', 'ASC']],
+    });
+    res.json(obrasSociales);
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener las obras sociales.', detalle: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener obras sociales' });
   }
 };
-
 export const obtenerObraSocialPorId = async (req, res) => {
   try {
     const { id } = req.params;
