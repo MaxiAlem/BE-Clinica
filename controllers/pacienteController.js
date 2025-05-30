@@ -1,4 +1,5 @@
 import Paciente from '../models/Paciente.js';
+import ObraSocial from '../models/ObraSocial.js';
 import { models } from '../models/index.js';
 
 /**
@@ -55,7 +56,13 @@ export const obtenerPacientePorDNI = async (req, res) => {
 
     const pacientes = await Paciente.findAll();
     console.log("Pacientes en DB:", pacientes.map(p => p.dni));
-    const paciente = await Paciente.findOne({ where: { dni: Number(dni) } });
+    const paciente = await Paciente.findOne({
+      where: { dni: Number(dni) },
+      include: {
+        model: ObraSocial, as: 'obraSocial'
+      },
+    });
+    
     if (!paciente) {
       return res.status(404).json({ error: 'Paciente no encontrado' });
     }

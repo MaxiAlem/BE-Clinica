@@ -36,7 +36,7 @@ const syncModels = async () => {
     await sequelize.sync({ alter: false }); // O false si ya está todo bien
   //  await seedObrasSociales();
    // await seedEspecialidades()
-    console.log('Modelos sincronizados con la base de datos');
+    console.log('Modelos sincronizados son la base de datos');
   } catch (error) {
     console.error('Error al sincronizar modelos con la base de datos:', error);
   }

@@ -16,6 +16,7 @@ router.get('/', (req, res) => {
 router.post('/login', login);
 // Usar rutas modulares
 router.use('/usuarios', usuarioRouter);
+
 router.use('/profesionales', profesionalRouter);
 router.use('/pacientes', pacienteRouter)
 router.use('/turnos', turnoRouter);
