@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 // Crear un nuevo usuario
 export const crearUsuario = async (req, res) => {
   try {
-    const { usuario, password, rol } = req.body;
+    const { usuario, password, rolId } = req.body;
 
     const usuarioExistente = await Usuario.findOne({ where: { usuario } });
     if (usuarioExistente) {
@@ -15,7 +15,7 @@ export const crearUsuario = async (req, res) => {
     const nuevoUsuario = await Usuario.create({
       usuario,
       password: hashedPassword,
-      rol,
+      rolId,
     });
 
     res.status(201).json(nuevoUsuario);

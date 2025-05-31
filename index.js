@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import sequelize  from './models/index.js'; // ruta main de modelos
 import routes from './routes/index.js'; // rutas duh
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 const URL = process.env.URL
