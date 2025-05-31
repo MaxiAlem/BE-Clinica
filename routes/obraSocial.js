@@ -11,6 +11,6 @@ obraSocialRouter.post('/', crearObraSocial);
 obraSocialRouter.get('/', obtenerObrasSociales);
 obraSocialRouter.get('/:id', obtenerObraSocialPorId);
 obraSocialRouter.put('/:id', actualizarObraSocial);
-obraSocialRouter.delete('/:id', eliminarObraSocial);
+obraSocialRouter.delete('/:id',eliminarObraSocial);
 
 export default obraSocialRouter;
