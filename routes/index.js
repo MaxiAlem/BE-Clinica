@@ -5,6 +5,7 @@ import pacienteRouter from './pacientes.js';
 import turnoRouter from './turnos.js';
 import obraSocialRouter from './obraSocial.js';
 import especialidadRouter from './especialidades.js';
+import metodoPagorouter from './metodosPago.js';
 import { login } from '../controllers/authController.js';
 
 const router = express.Router();
@@ -17,6 +18,7 @@ router.post('/login', login);
 // Usar rutas modulares
 router.use('/usuarios', usuarioRouter);
 
+router.use('/metodos-pago', metodoPagorouter)
 router.use('/profesionales', profesionalRouter);
 router.use('/pacientes', pacienteRouter)
 router.use('/turnos', turnoRouter);

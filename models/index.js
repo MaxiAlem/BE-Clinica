@@ -43,7 +43,7 @@ const syncModels = async () => {
   //  await seedObrasSociales();
   // await seedEspecialidades()
   //await generarRolesBase(); 
-  await genmetodosPago()
+  //await genmetodosPago()
     console.log('Modelos sincronizados son la base de datos');
   } catch (error) {
     console.error('Error al sincronizar modelos con la base de datos:', error);
