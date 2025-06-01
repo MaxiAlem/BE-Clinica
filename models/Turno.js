@@ -26,9 +26,21 @@ const Turno = sequelize.define('Turno', {
       key: 'id'
     }
   },
-  obraSocial: {
-    type: DataTypes.STRING,
-    allowNull: true
+  obraSocialId: {  // Cambiado de 'obraSocial' STRING a 'obraSocialId' INTEGER
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'obras_sociales', 
+      key: 'id'
+    }
+  },
+  metodoPagoId: {  // Nuevo campo para método de pago
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'metodos_pago',  
+      key: 'id'
+    }
   },
   porcentajeCobertura: {
     type: DataTypes.FLOAT,
@@ -68,6 +80,8 @@ const Turno = sequelize.define('Turno', {
 Turno.associate = (models) => {
   Turno.belongsTo(models.Paciente, { foreignKey: 'pacienteId', as: 'Paciente' });
   Turno.belongsTo(models.Profesional, { foreignKey: 'profesionalId', as: 'Profesional' });
+  Turno.belongsTo(models.ObraSocial, { foreignKey: 'obraSocialId', as: 'ObraSocial' });
+  Turno.belongsTo(models.MetodoPago, { foreignKey: 'metodoPagoId', as: 'MetodoPago' });
 };
 
 export default Turno;
