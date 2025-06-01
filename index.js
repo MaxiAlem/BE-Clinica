@@ -2,11 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import sequelize  from './models/index.js'; // ruta main de modelos
 import routes from './routes/index.js'; // rutas duh
+import cookieParser from 'cookie-parser';
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const URL = process.env.URL
 // Middlewares
 
+app.use(cookieParser()); // Permite leer req.cookies
 // app.use(cors({
 //     origin: URL , // Reemplaza esto con la URL de tu frontend
 //     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
@@ -27,13 +30,15 @@ const URL = process.env.URL
         callback(new Error('Not allowed by CORS'));
       }
     },
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], 
+  allowedHeaders: ['Content-Type'] 
   }));
 app.use(express.json());
 
 // Rutas
-//app.use('/api', routes);// para local
-app.use('/', routes); //para servidor
+app.use('/api', routes);// para local
+//app.use('/', routes); //para servidor
 
 
 app.listen(PORT, async () => {

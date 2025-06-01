@@ -8,7 +8,8 @@ export const login = async (req, res) => {
 
   try {
     const user = await Usuario.findOne({
-      where: { usuario }, include: [{ model: Rol, as: 'rol' }]
+      where: { usuario }, 
+      include: [{ model: Rol, as: 'rol' }]
     });
     if (!user) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
 
@@ -20,6 +21,21 @@ export const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '100h' } // o el tiempo que quieras
     );
+
+       // HttpOnly(fans?)
+       res.cookie('token', token, {
+        httpOnly: true,   
+        secure: process.env.NODE_ENV === 'production', // Solo HTTPS en produ
+        sameSite: 'strict',  // prote contra CSRF
+        maxAge: 100 * 60 * 60 * 1000 // 100 horas en ms 
+      });
+      // Respuesta sin el token 
+      res.status(200).json({ 
+        usuario: user.usuario, 
+        rol: user.rol.nombre,
+        mensaje: 'Login exitoso' //<--- el mensaje tratemos de meterlo siempre
+      });
+  
 
     res.json({ token, usuario: user.usuario, rol: user.rol.nombre });
   } catch (error) {
