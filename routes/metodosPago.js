@@ -4,7 +4,7 @@ import {
   crearMetodoPago,
   actualizarMetodoPago,
   eliminarMetodoPago
-} from '../controllers/MetodoPagoController.js';
+} from '../controllers/metodoPagoController.js';
 
 
 const metodoPagorouter = express.Router();
