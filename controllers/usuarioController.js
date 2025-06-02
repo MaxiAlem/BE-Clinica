@@ -1,4 +1,5 @@
 import Usuario from '../models/Usuario.js';
+import Rol from '../models/Role.js';
 import bcrypt from 'bcrypt';
 
 // Crear un nuevo usuario
@@ -28,10 +29,12 @@ export const crearUsuario = async (req, res) => {
 // Obtener todos los usuarios
 export const obtenerUsuarios = async (req, res) => {
   try {
-    const usuarios = await Usuario.findAll();
+    const usuarios = await Usuario.findAll({
+      include: [{ model: Rol, as: 'rol' }] // Incluye los datos del rol
+    });
     res.json(usuarios);
   } catch (error) {
-    res.status(500).json({ mensaje: 'Error al obtener los usuarios' });
+    res.status(500).json({ mensaje: 'Error al obtener los usuarios', error: error.message });
   }
 };
 
