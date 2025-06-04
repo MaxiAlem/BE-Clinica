@@ -28,7 +28,9 @@ import { models } from '../models/index.js';//para meter los includes
       // 3. Obtener el profesional con sus relaciones
       const profesionalCompleto = await Profesional.findByPk(profesional.id, {
         include: [
-          { model: Especialidad, as: 'especialidad' },
+          { model: Especialidad, as: 'especialidad',
+          attributes: ['id', 'nombre'] // Para traer solo esos campos
+         },
           { model: Disponibilidad, as: 'disponibilidades' }
         ],
         transaction: t
@@ -46,20 +48,20 @@ import { models } from '../models/index.js';//para meter los includes
 
 //obtener profesionales
 export const obtenerProfesionales = async (req, res) => {
-    try {
-      const profesionales = await Profesional.findAll({
-        include: {
-            model: models.Disponibilidad,
-            as: 'disponibilidades'
-          }
-      });
-      res.status(200).json(profesionales);
-    } catch (err) {
-        console.error("Error en obtenerprofesioanes:", err);
-      res.status(500).json({ error: err.message });
-    }
-  };
-  
+  try {
+    const profesionales = await Profesional.findAll({
+      include: [
+        { model: Especialidad, as: 'especialidad', attributes: ['id', 'nombre'] },
+        { model: Disponibilidad, as: 'disponibilidades' }
+      ]
+    });
+    res.status(200).json(profesionales);
+  } catch (err) {
+    console.error("Error en obtenerProfesionales:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 /**
  * Obtener un profesional por ID
  */
@@ -74,7 +76,9 @@ export const obtenerProfesionales = async (req, res) => {
     const profesional = await Profesional.findOne({
       where: whereClause,
       include: [
-        { model: Especialidad, as: 'especialidad' },
+        { model: Especialidad, as: 'especialidad',
+        attributes: ['id', 'nombre'] // Para traer solo esos campos
+       },
         { model: Disponibilidad, as: 'disponibilidades' }
       ]
     });

@@ -1,6 +1,7 @@
 import Turno from '../models/Turno.js';
 import Paciente from '../models/Paciente.js';
 import Profesional from '../models/Profesional.js';
+import Especialidad from '../models/Especialidad.js';
 
 /**
  * Crear un nuevo turno
@@ -67,8 +68,16 @@ export const obtenerTurnosPorPaciente = async (req, res) => {
     const turnos = await Turno.findAll({
       where: { pacienteId },
       include: [
-        { model: Profesional, as: 'Profesional' }
-      ]
+        { 
+          model: Profesional,
+          as: 'Profesional',
+          include: [{
+            model: Especialidad,
+            as: 'especialidad',
+            attributes: ['id', 'nombre'] // Solo traemos estos campos
+          }]
+        }
+      ],
     });
     res.json(turnos);
   } catch (err) {
@@ -87,7 +96,7 @@ export const obtenerTurnosPorPaciente = async (req, res) => {
       include: [
         {
           model: Paciente,
-          as: 'Paciente'  // <-- ACA el alias exacto
+          as: 'Paciente'  
         }
       ]
     });
