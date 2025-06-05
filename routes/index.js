@@ -24,7 +24,7 @@ router.use('/profesionales', profesionalRouter);
 router.use('/pacientes', pacienteRouter)
 router.use('/turnos', turnoRouter);
 router.use('/obras-sociales', obraSocialRouter);
-router.use('/especialidad', especialidadRouter)
+router.use('/especialidades', especialidadRouter)
 router.use('/roles', rolRouter)
 
 
