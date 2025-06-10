@@ -73,7 +73,7 @@ export const obtenerTurnosPorPaciente = async (req, res) => {
           as: 'Profesional',
           include: [{
             model: Especialidad,
-            as: 'especialidad',
+            as: 'especialidades',
             attributes: ['id', 'nombre'] // Solo traemos estos campos
           }]
         }
