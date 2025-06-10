@@ -15,10 +15,11 @@ const Especialidad = sequelize.define('Especialidad', {
 });
 
 Especialidad.associate = (models) => {
-  Especialidad.hasMany(models.Profesional, {
+  Especialidad.belongsToMany(models.Profesional, {
+    through: models.ProfesionalEspecialidad,
     foreignKey: 'especialidadId',
-    as: 'profesionales',
+    otherKey: 'profesionalId',
+    as: 'profesionales'
   });
 };
-
 export default Especialidad;
