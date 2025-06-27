@@ -41,7 +41,7 @@ Object.values(models).forEach((model) => {
 const syncModels = async () => {
   try {
     // Sincronizamos todos los modelos
-    await Turno.sync({ alter: true }); // O false si ya está todo bien
+    await Profesional.sync({ alter: true }); // O false si ya está todo bien
   //  await seedObrasSociales();
   // await seedEspecialidades()
   //await generarRolesBase(); 

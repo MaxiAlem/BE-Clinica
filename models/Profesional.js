@@ -25,6 +25,12 @@ const Profesional = sequelize.define('Profesional', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  turnoBase: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: 15, // Tiempo de turno en minutos
+    comment: "Duración base del turno en minutos"
+  },
   // especialidadId: {
   //      type: DataTypes.INTEGER,
   //      allowNull: false,
