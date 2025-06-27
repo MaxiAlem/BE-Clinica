@@ -26,19 +26,19 @@ const Turno = sequelize.define('Turno', {
       key: 'id'
     }
   },
-  obraSocialId: {  // Cambiado de 'obraSocial' STRING a 'obraSocialId' INTEGER
+  obraSocialId: {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: 'obras_sociales', 
+      model: 'obras_sociales',
       key: 'id'
     }
   },
-  metodoPagoId: {  // Nuevo campo para método de pago
+  metodoPagoId: {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: 'metodos_pago',  
+      model: 'metodos_pago',
       key: 'id'
     }
   },
@@ -68,6 +68,11 @@ const Turno = sequelize.define('Turno', {
   notas: {
     type: DataTypes.TEXT,
     allowNull: true
+  },
+  tipo: {
+    type: DataTypes.ENUM('turno', 'sobreturno'),
+    allowNull: true,
+    defaultValue: 'turno'
   }
 }, {
   paranoid: true,
@@ -75,8 +80,7 @@ const Turno = sequelize.define('Turno', {
   tableName: 'turnos'
 });
 
-// Asociaciones que haríamos (asumiendo que ya definiste Paciente y Profesional)
-
+// Asociaciones
 Turno.associate = (models) => {
   Turno.belongsTo(models.Paciente, { foreignKey: 'pacienteId', as: 'Paciente' });
   Turno.belongsTo(models.Profesional, { foreignKey: 'profesionalId', as: 'Profesional' });

@@ -9,6 +9,7 @@ import Especialidad from '../models/Especialidad.js';
 export const crearTurno = async (req, res) => {
   try {
     const turno = await Turno.create(req.body);
+    console.log("FECHA QUE LLEGA DEL FRONT:", req.body.start, req.body.end);
     res.status(201).json(turno);
   } catch (err) {
     console.error("Error en crearTurno:", err);
