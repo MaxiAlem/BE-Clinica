@@ -8,7 +8,9 @@ import {
   restaurarTurno,
   obtenerTurnosPorPaciente,
   obtenerTurnosPorProfesional,
-  obtenerTurnosPorDia
+  obtenerTurnosPorDia,
+  obtenerTurnosPorProfesionalYDia,
+  generarAgendaPDFPorProfesionalYDia
 } from '../controllers/turnoController.js';
 
 const turnoRouter = express.Router();
@@ -17,6 +19,8 @@ const turnoRouter = express.Router();
 turnoRouter.get('/paciente/:pacienteId', obtenerTurnosPorPaciente);
 turnoRouter.get('/profesional/:profesionalId', obtenerTurnosPorProfesional);
 turnoRouter.get('/fecha/dia', obtenerTurnosPorDia); // ?fecha=YYYY-MM-DD
+turnoRouter.get('/profesional/:profesionalId/turnos-dia', obtenerTurnosPorProfesionalYDia);
+turnoRouter.get('/profesional/:profesionalId/dia/pdf', generarAgendaPDFPorProfesionalYDia);
 
 // CRUD
 turnoRouter.post('/', crearTurno);
