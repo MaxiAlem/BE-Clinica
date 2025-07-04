@@ -264,43 +264,48 @@ export const generarAgendaPDFPorProfesionalYDia = async (req, res) => {
 
     // Configuración de columnas (proporciones ajustadas)
     const columns = [
-      { label: "Hora", width: 35 },            // 50 * 0.7
+      { label: "Hora", width: 40 },            // 50 * 0.7
       { label: "Durac.", width: 42 },        // 60 * 0.7
       { label: "Tipo", width: 60 },
-      { label: "Obra Soc.", width: 132 },    // 110 * 1.2
-      { label: "Paciente", width: 110 },
+      { label: "Obra Soc.", width: 130 },    // 110 * 1.2
+      { label: "Paciente", width: 125 },
       { label: "Valor", width: 60 },
       { label: "Seña", width: 50 },
-      { label: "Motivo", width: 90 },
-      { label: "Observaciones", width: 100 },
-      { label: "Asis.", width: 30 }
+      { label: "Motivo", width: 100 },
+      { label: "Observaciones", width: 130 },
+      { label: "Asis.", width: 25 }
     ];
-    const rowHeight = 22;
+    const rowMinHeight = 22;
     const startX = 40;
     let posY = 120;
 
     // Crear el PDF en modo landscape
-    const doc = new PDFDocument({ margin: 40, size: 'A4', layout: 'landscape' });
+    const doc = new PDFDocument({ margin: 35, size: 'A4', layout: 'landscape' });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="agenda_profesional_${profesionalId}_${fecha}.pdf"`);
     doc.pipe(res);
 
     // Encabezado
     const profesional = turnos[0].Profesional;
-    doc.fontSize(18).text(`Agenda de ${profesional.nombre} ${profesional.apellido}`, { align: 'center' });
-    doc.fontSize(12).text(`Fecha: ${fecha}`, { align: 'center' });
-    doc.moveDown(1);
+    doc.fontSize(16).text(`Agenda de ${profesional.nombre} ${profesional.apellido}`, { align: 'center' });
+    doc.fontSize(10).text(`Fecha: ${fecha}`, { align: 'center' });
+    doc.moveDown(0);
 
     // Definir color de borde de la grilla gris
     doc.strokeColor('#bbbbbb');
 
+
+
+doc.registerFont('Actor', './fonts/Actor-Regular.ttf');
     // Cabecera de la tabla (fondo gris claro)
+    
+doc.font('Actor');
     let posX = startX;
     doc.font("Helvetica-Bold").fontSize(10);
     columns.forEach(col => {
       doc
         .fillColor('#f5f5f5')
-        .rect(posX, posY, col.width, rowHeight)
+        .rect(posX, posY, col.width, rowMinHeight)
         .fillAndStroke();
       doc
         .fillColor('black')
@@ -308,9 +313,10 @@ export const generarAgendaPDFPorProfesionalYDia = async (req, res) => {
       posX += col.width;
     });
 
-    // Filas de turnos
-    doc.font("Helvetica").fontSize(10);
-    posY += rowHeight;
+    // Filas de turnos con altura dinámica según contenido
+  
+    doc.font('Actor').fontSize(10);
+    posY += rowMinHeight;
     turnos.forEach(turno => {
       posX = startX;
       const hora = new Date(turno.start).toLocaleTimeString("es-AR", { hour: '2-digit', minute: '2-digit' });
@@ -321,6 +327,7 @@ export const generarAgendaPDFPorProfesionalYDia = async (req, res) => {
       const costoTotal = turno.costoTotal !== undefined ? `$${turno.costoTotal}` : '';
       const sena = turno.sena !== undefined ? `$${turno.sena}` : '';
       const motivo = turno.motivo || '';
+      const notas = turno.notas || '';
 
       const fila = [
         hora,
@@ -331,24 +338,34 @@ export const generarAgendaPDFPorProfesionalYDia = async (req, res) => {
         costoTotal,
         sena,
         motivo,
-        "", // Observaciones (vacío)
+        notas, // Observaciones (vacío)
         ""  // Asist (vacío)
       ];
+
+      // Calcular la altura necesaria de la fila según el contenido de cada celda
+      const cellHeights = fila.map((cell, i) =>
+        doc.heightOfString(String(cell), {
+          width: columns[i].width - 4,
+          align: "left"
+        })
+      );
+      const dynamicRowHeight = Math.max(...cellHeights, rowMinHeight);
 
       fila.forEach((cell, i) => {
         doc
           .fillColor('white')
-          .rect(posX, posY, columns[i].width, rowHeight)
+          .rect(posX, posY, columns[i].width, dynamicRowHeight)
           .fillAndStroke();
         doc
           .fillColor('black')
-          .text(String(cell).substring(0, 32), posX + 2, posY + 6, {
+          .text(String(cell), posX + 2, posY + 6, {
             width: columns[i].width - 4,
             align: "left",
           });
         posX += columns[i].width;
       });
-      posY += rowHeight;
+      posY += dynamicRowHeight;
+
       // Salto de página si es necesario
       if (posY > doc.page.height - 60) {
         doc.addPage({ layout: 'landscape' });
@@ -356,19 +373,19 @@ export const generarAgendaPDFPorProfesionalYDia = async (req, res) => {
         // Repetir cabecera de tabla en nueva página
         posX = startX;
         doc.strokeColor('#bbbbbb');
-        doc.font("Helvetica-Bold").fontSize(10);
+        doc.font('Actor').fontSize(19);
         columns.forEach(col => {
           doc
             .fillColor('#f5f5f5')
-            .rect(posX, posY, col.width, rowHeight)
+            .rect(posX, posY, col.width, rowMinHeight)
             .fillAndStroke();
           doc
             .fillColor('black')
             .text(col.label, posX + 2, posY + 6, { width: col.width - 4, align: "left" });
           posX += col.width;
         });
-        doc.font("Helvetica").fontSize(10);
-        posY += rowHeight;
+        doc.font('Actor').fontSize(9);
+        posY += rowMinHeight;
       }
     });
 
