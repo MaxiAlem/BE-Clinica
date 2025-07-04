@@ -297,11 +297,13 @@ export const generarAgendaPDFPorProfesionalYDia = async (req, res) => {
 
 
 doc.registerFont('Actor', './fonts/Actor-Regular.ttf');
+doc.registerFont('ArchivoNarrow', './fonts/ArchivoNarrow-Regular.ttf');
+doc.registerFont('ArchivoNarrow-Bold', './fonts/ArchivoNarrow-Bold.ttf');
     // Cabecera de la tabla (fondo gris claro)
     
-doc.font('Actor');
+doc.font('ArchivoNarrow');
     let posX = startX;
-    doc.font("Helvetica-Bold").fontSize(10);
+    doc.font("ArchivoNarrow-Bold").fontSize(10);
     columns.forEach(col => {
       doc
         .fillColor('#f5f5f5')
@@ -315,7 +317,7 @@ doc.font('Actor');
 
     // Filas de turnos con altura dinámica según contenido
   
-    doc.font('Actor').fontSize(10);
+    doc.font('ArchivoNarrow').fontSize(10);
     posY += rowMinHeight;
     turnos.forEach(turno => {
       posX = startX;
@@ -351,6 +353,29 @@ doc.font('Actor');
       );
       const dynamicRowHeight = Math.max(...cellHeights, rowMinHeight);
 
+      
+  // ======= Chequeo antes de dibujar =======
+  if (posY + dynamicRowHeight > doc.page.height - 40) {
+    doc.addPage({ layout: 'landscape' });
+    posY = 40;
+    posX = startX;
+    doc.strokeColor('#bbbbbb');
+    doc.font('ArchivoNarrow-Bold').fontSize(10);
+    columns.forEach(col => {
+      doc
+        .fillColor('#f5f5f5')
+        .rect(posX, posY, col.width, rowMinHeight)
+        .fillAndStroke();
+      doc
+        .fillColor('black')
+        .text(col.label, posX + 2, posY + 6, { width: col.width - 4, align: "left" });
+      posX += col.width;
+    });
+    doc.font('ArchivoNarrow').fontSize(10);
+    posY += rowMinHeight;
+  }
+  // ========================================
+
       fila.forEach((cell, i) => {
         doc
           .fillColor('white')
@@ -373,7 +398,7 @@ doc.font('Actor');
         // Repetir cabecera de tabla en nueva página
         posX = startX;
         doc.strokeColor('#bbbbbb');
-        doc.font('Actor').fontSize(19);
+        doc.font('ArchivoNarrow').fontSize(19);
         columns.forEach(col => {
           doc
             .fillColor('#f5f5f5')
@@ -384,7 +409,7 @@ doc.font('Actor');
             .text(col.label, posX + 2, posY + 6, { width: col.width - 4, align: "left" });
           posX += col.width;
         });
-        doc.font('Actor').fontSize(9);
+        doc.font('ArchivoNarrow').fontSize(9);
         posY += rowMinHeight;
       }
     });
