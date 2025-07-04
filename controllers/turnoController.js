@@ -383,7 +383,7 @@ doc.font('ArchivoNarrow');
           .fillAndStroke();
         doc
           .fillColor('black')
-          .text(String(cell), posX + 2, posY + 6, {
+          .text(String(cell), posX + 2, posY + 2, {
             width: columns[i].width - 4,
             align: "left",
           });
@@ -406,7 +406,7 @@ doc.font('ArchivoNarrow');
             .fillAndStroke();
           doc
             .fillColor('black')
-            .text(col.label, posX + 2, posY + 6, { width: col.width - 4, align: "left" });
+            .text(col.label, posX + 2, posY + 2, { width: col.width - 4, align: "left" });
           posX += col.width;
         });
         doc.font('ArchivoNarrow').fontSize(9);
