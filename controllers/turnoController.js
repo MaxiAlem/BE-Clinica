@@ -386,6 +386,7 @@ doc.font('ArchivoNarrow');
           .text(String(cell), posX + 2, posY + 2, {
             width: columns[i].width - 4,
             align: "left",
+            lineGap: 0 
           });
         posX += columns[i].width;
       });
