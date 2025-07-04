@@ -321,7 +321,8 @@ doc.font('ArchivoNarrow');
     posY += rowMinHeight;
     turnos.forEach(turno => {
       posX = startX;
-      const hora = new Date(turno.start).toLocaleTimeString("es-AR", { hour: '2-digit', minute: '2-digit' });
+      const hora = new Date(turno.start).toLocaleTimeString("es-AR", { hour: '2-digit', minute: '2-digit',
+      hour12: false });
       const duracionMs = new Date(turno.end) - new Date(turno.start);
       const duracionMin = Math.round(duracionMs / 60000);
       const obraSocial = turno.ObraSocial?.nombre || '';
