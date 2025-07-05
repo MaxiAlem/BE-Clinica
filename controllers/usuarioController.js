@@ -56,15 +56,13 @@ export const obtenerUsuarioPorId = async (req, res) => {
 export const actualizarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
-    const { usuario, password, rol } = req.body;
+    const { usuario, password, rolId } = req.body; // <-- nota el nombre
 
     const user = await Usuario.findByPk(id);
     if (!user) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
 
-    const updatedData = {
-      usuario,
-      rol
-    };
+    const updatedData = { usuario };
+    if (rolId !== undefined) updatedData.rolId = rolId; // <-- así
 
     if (password) {
       updatedData.password = await bcrypt.hash(password, 10);
