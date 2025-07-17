@@ -60,6 +60,17 @@ const Profesional = sequelize.define('Profesional', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      isEmail: true,
+    },
+  },
+  telefono: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   fechaNacimiento: {
     type: DataTypes.DATEONLY,
     allowNull: true

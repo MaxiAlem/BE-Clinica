@@ -62,6 +62,10 @@ const Paciente = sequelize.define('Paciente', {
     },
     allowNull: true,
   },
+  nAfiliado: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 }, {
   paranoid: true, // Para borrado lógico (deletedAt)
   timestamps: true, // createdAt, updatedAt
