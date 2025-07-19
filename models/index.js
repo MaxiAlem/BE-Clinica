@@ -11,6 +11,7 @@ import Especialidad from './Especialidad.js';
 import Rol from './Role.js';
 import MetodoPago from './MetodoPago.js';
 import ProfesionalEspecialidad from './ProfesEspecialidad.js';
+import DiaLibre from './DiasLibre.js'; 
 
 //import seedObrasSociales from '../seeders/22052025-obras-sociales.js';
 //import seedEspecialidades from '../seeders/22052025-especialidades.js';
@@ -27,7 +28,8 @@ const models = {
   Especialidad,
   Rol,
   MetodoPago,
-  ProfesionalEspecialidad
+  ProfesionalEspecialidad,
+  DiaLibre,
 };
 
 // Ejecutar las asociaciones
