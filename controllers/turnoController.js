@@ -348,8 +348,11 @@ doc.font('ArchivoNarrow');
       hour12: false });
       const duracionMs = new Date(turno.end) - new Date(turno.start);
       const duracionMin = Math.round(duracionMs / 60000);
-      const obraSocial = turno.ObraSocial?.nombre || '';
-      const paciente = `${turno.Paciente?.nombre || ''} ${turno.Paciente?.apellido || ''}`;
+      const obraSocial = turno.ObraSocial?.nombre
+  ? `${turno.ObraSocial.nombre}${turno.Paciente?.nAfiliado ? `  ( N°:${turno.Paciente.nAfiliado})` : ''}`
+  : '';
+
+      const paciente = `${turno.Paciente?.nombre || ''} ${turno.Paciente?.apellido || ''}  (DNI:${turno.Paciente?.dni || 'sin DNI'})`;
       const costoTotal = turno.costoTotal !== undefined ? `$${turno.costoTotal}` : '';
       const sena = turno.sena !== undefined ? `$${turno.sena}` : '';
       const motivo = turno.motivo || '';
@@ -407,10 +410,10 @@ doc.font('ArchivoNarrow');
           .fillAndStroke();
         doc
           .fillColor('black')
-          .text(String(cell), posX + 2, posY + 2, {
+          .text(String(cell), posX + 4, posY + 1, {
             width: columns[i].width - 4,
             align: "left",
-            lineGap: 0 
+            lineGap: -1
           });
         posX += columns[i].width;
       });
