@@ -3,16 +3,39 @@ import Paciente from '../models/Paciente.js';
 import Profesional from '../models/Profesional.js';
 import Especialidad from '../models/Especialidad.js';
 import ObraSocial from "../models/ObraSocial.js";
+import DiaLibre from '../models/DiasLibre.js';
 import PDFDocument from "pdfkit";
 import { Op } from "sequelize";
 
 /**
  * Crear un nuevo turno
  */
+
 export const crearTurno = async (req, res) => {
   try {
+    const { start, end, profesionalId } = req.body;
+
+    const fechaTurno = new Date(start);
+
+    // Buscar si cae en un día libre
+    const diaLibre = await DiaLibre.findOne({
+      where: {
+        profesionalId,
+        fechaInicio: { [Op.lte]: fechaTurno },
+        fechaFin: { [Op.gte]: fechaTurno }
+      }
+    });
+
+    if (diaLibre) {
+      const desde = new Date(diaLibre.fechaInicio).toISOString().slice(0, 10);
+      const hasta = new Date(diaLibre.fechaFin).toISOString().slice(0, 10);
+      return res.status(400).json({
+        error: `El profesional está de vacaciones del ${desde} al ${hasta}.`
+      });
+    }
+
     const turno = await Turno.create(req.body);
-    console.log("FECHA QUE LLEGA DEL FRONT:", req.body.start, req.body.end);
+    console.log("FECHA QUE LLEGA DEL FRONT:", start, end);
     res.status(201).json(turno);
   } catch (err) {
     console.error("Error en crearTurno:", err);
@@ -325,9 +348,10 @@ doc.font('ArchivoNarrow');
       hour12: false });
       const duracionMs = new Date(turno.end) - new Date(turno.start);
       const duracionMin = Math.round(duracionMs / 60000);
-      const obraSocial = turno.ObraSocial?.nombre 
-      ? `${turno.ObraSocial.nombre}${turno.Paciente?.nAfiliado ? `  ( N°:${turno.Paciente.nAfiliado})` : ''}`
-      : '';
+      const obraSocial = turno.ObraSocial?.nombre
+  ? `${turno.ObraSocial.nombre}${turno.Paciente?.nAfiliado ? `  ( N°:${turno.Paciente.nAfiliado})` : ''}`
+  : '';
+
       const paciente = `${turno.Paciente?.nombre || ''} ${turno.Paciente?.apellido || ''}  (DNI:${turno.Paciente?.dni || 'sin DNI'})`;
       const costoTotal = turno.costoTotal !== undefined ? `$${turno.costoTotal}` : '';
       const sena = turno.sena !== undefined ? `$${turno.sena}` : '';
@@ -347,7 +371,7 @@ doc.font('ArchivoNarrow');
         ""  // Asist (vacío)
       ];
 
-      // calc la h necesaria de la fila segun  el contenido de c/celda
+      // Calcular la altura necesaria de la fila según el contenido de cada celda
       const cellHeights = fila.map((cell, i) =>
         doc.heightOfString(String(cell), {
           width: columns[i].width - 4,
@@ -389,7 +413,7 @@ doc.font('ArchivoNarrow');
           .text(String(cell), posX + 4, posY + 1, {
             width: columns[i].width - 4,
             align: "left",
-            lineGap: -1 
+            lineGap: -1
           });
         posX += columns[i].width;
       });

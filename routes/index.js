@@ -8,6 +8,7 @@ import especialidadRouter from './especialidades.js';
 import metodoPagorouter from './metodosPago.js';
 import rolRouter from './rol.js';
 import { login } from '../controllers/authController.js';
+import diasLibreRouter from './diasLibre.js';
 
 const router = express.Router();
 
@@ -19,13 +20,14 @@ router.post('/login', login);
 // Usar rutas modulares
 router.use('/usuarios', usuarioRouter);
 
-router.use('/metodos-pago', metodoPagorouter)
+router.use('/metodos-pago', metodoPagorouter);
 router.use('/profesionales', profesionalRouter);
-router.use('/pacientes', pacienteRouter)
+router.use('/pacientes', pacienteRouter);
 router.use('/turnos', turnoRouter);
 router.use('/obras-sociales', obraSocialRouter);
-router.use('/especialidad', especialidadRouter)
-router.use('/roles', rolRouter)
+router.use('/especialidad', especialidadRouter);
+router.use('/roles', rolRouter);
+router.use('/dias-libres', diasLibreRouter);
 
 
-export default router;
+export default router;  
