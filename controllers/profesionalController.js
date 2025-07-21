@@ -3,7 +3,10 @@
   import Profesional from '../models/Profesional.js';
   import Disponibilidad from '../models/Disponibilidad.js';
   import Especialidad from '../models/Especialidad.js'; 
+  import DiaLibre from '../models/DiasLibre.js';
+  import UsuarioProfesional from '../models/UsuarioProfesional.js';
   import { models } from '../models/index.js';//para meter los includes 
+  import { Op } from 'sequelize'; // Asegurate de importar Op
   /**
    * Crear un nuevo profesional
    */
@@ -52,50 +55,86 @@ if (especialidades && especialidades.length > 0) {
     }
   };
 
-  //obtener profesionales
-  export const obtenerProfesionales = async (req, res) => {
-    try {
-      const profesionales = await Profesional.findAll({
-        include: [
-          { model: Especialidad, as: 'especialidades', attributes: ['id', 'nombre'],
-          through: { attributes: [] }  },
-          { model: Disponibilidad, as: 'disponibilidades' }
-        ],
-        order: [
-          ['apellido', 'ASC'],
-          ['nombre', 'ASC']
-        ]
-      });
-      res.status(200).json(profesionales);
-    } catch (err) {
-      console.error("Error en obtenerProfesionales:", err);
-      res.status(500).json({ error: err.message });
-    }
-  };
+ // obtenerProfesionales filtrando por rol de usuario
+ export const obtenerProfesionales = async (req, res) => {
+  try {
+    const hoy = new Date();
+    const { id, rol } = req.user;
+    let where = {};
 
+    if (rol === "profesional") {
+      // Buscar los IDs de profesionales asociados a este usuario
+      const asociaciones = await UsuarioProfesional.findAll({
+        where: { usuarioId: id },
+        attributes: ["profesionalId"],
+      });
+      const idsPermitidos = asociaciones.map(a => a.profesionalId);
+
+      // Si no tiene ninguno asociado, devolvé vacío
+      if (!idsPermitidos.length) {
+        return res.status(200).json([]);
+      }
+
+      where.id = { [Op.in]: idsPermitidos };
+    }
+
+    const profesionales = await Profesional.findAll({
+      where,
+      include: [
+        { 
+          model: Especialidad, 
+          as: "especialidades", 
+          attributes: ["id", "nombre"],
+          through: { attributes: [] },
+        },
+        { 
+          model: Disponibilidad, 
+          as: "disponibilidades"
+        },
+        {
+          model: DiaLibre,
+          as: "diasLibres",
+          where: {
+            fechaFin: { [Op.gte]: hoy }
+          },
+          required: false
+        }
+      ],
+      order: [
+        ["apellido", "ASC"],
+        ["nombre", "ASC"]
+      ]
+    });
+
+    res.status(200).json(profesionales);
+  } catch (err) {
+    console.error("Error en obtenerProfesionales:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
   /**
    * Obtener un profesional por ID
    */
-  export const obtenerProfesionalPorId = async (req, res) => {
+   export const obtenerProfesionalPorId = async (req, res) => {
     try {
       const { id } = req.params;
-
       const whereClause = isNaN(id)
         ? { slug: id }
         : { id: Number(id) };
-
+  
       const profesional = await Profesional.findOne({
         where: whereClause,
         include: [
           { model: Especialidad, as: 'especialidades', attributes: ['id', 'nombre'] },
-          { model: Disponibilidad, as: 'disponibilidades' }
+          { model: Disponibilidad, as: 'disponibilidades' },
+          { model: DiaLibre, as: 'diasLibres' } // Trae todos
         ]
       });
-
+  
       if (!profesional) {
         return res.status(404).json({ error: 'Profesional no encontrado' });
       }
-
+  
       res.json(profesional);
     } catch (err) {
       console.error("Error en obtenerProfesionalPorId:", err);

@@ -2,6 +2,7 @@ import Usuario from '../models/Usuario.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import Rol from '../models/Role.js';
+import Profesional from '../models/Profesional.js';
 
 export const login = async (req, res) => {
   const { usuario, password } = req.body;
@@ -17,29 +18,48 @@ export const login = async (req, res) => {
     if (!passwordValido) return res.status(401).json({ mensaje: 'Contraseña incorrecta' });
 
     const token = jwt.sign(
-      { id: user.id, rol: user.rol.nombre },//crea un JWT que contiene el id y el rol
+      { id: user.id, rol: user.rol.nombre }, // crea un JWT que contiene el id y el rol
       process.env.JWT_SECRET,
-      { expiresIn: '100h' } // o el tiempo que quieras
+      { expiresIn: '100h' }
     );
 
-       // HttpOnly(fans?)
-       res.cookie('token', token, {
-        httpOnly: true,   
-        secure: process.env.NODE_ENV === 'production', // Solo HTTPS en produ
-        sameSite: 'strict',  // prote contra CSRF
-        maxAge: 100 * 60 * 60 * 1000 // 100 horas en ms 
-      });
-      // Respuesta sin el token 
-      res.status(200).json({ 
-        usuario: user.usuario, 
-        rol: user.rol.nombre,
-        mensaje: 'Login exitoso' //<--- el mensaje tratemos de meterlo siempre
-      });
-  
+    res.cookie('token', token, {
+      httpOnly: true,   
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 100 * 60 * 60 * 1000 // 100 horas en ms 
+    });
 
-    res.json({ token, usuario: user.usuario, rol: user.rol.nombre });
+    // *** Solo una respuesta ***
+    res.status(200).json({ 
+      usuario: user.usuario, 
+      rol: user.rol.nombre,
+      mensaje: 'Login exitoso'
+    });
+    // No pongas nada más después de esto
   } catch (error) {
-    console.error('ERROR EN LOGIN', error);  // <-- importante
+    console.error('ERROR EN LOGIN', error);
     res.status(500).json({ mensaje: 'Error en el login' });
+  }
+};
+
+// /ME
+export const me = async (req, res) => {
+  try {
+    const { id } = req.user;
+
+    const usuario = await Usuario.findByPk(id, {
+      include: [{ model: Rol, as: 'rol' },
+      { model: Profesional, as: 'profesionales' }]
+    });
+
+    if (!usuario) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+
+    // Nunca envíes el password
+    const { password, ...usuarioSafe } = usuario.toJSON();
+
+    res.json(usuarioSafe);
+  } catch (error) {
+    res.status(500).json({ mensaje: 'Error al obtener usuario actual', error: error.message });
   }
 };

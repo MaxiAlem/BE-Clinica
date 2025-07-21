@@ -97,7 +97,23 @@ Profesional.associate = (models) => {
     otherKey: 'especialidadId',
     as: 'especialidades'
   });
+  Profesional.hasMany(models.DiaLibre, {
+    foreignKey: 'profesionalId',
+    as: 'diasLibres'
+  });
+  // Relación N a N con usuario
+Profesional.belongsToMany(models.Usuario, {
+  through: models.UsuarioProfesional,
+  foreignKey: 'profesionalId',
+  otherKey: 'usuarioId',
+  as: 'usuarios'
+});
+
 };
+
+
+
+
 
 Profesional.beforeCreate(async (profesional, options) => {
   if (!profesional.slug && profesional.nombre && profesional.apellido) {
