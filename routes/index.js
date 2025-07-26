@@ -21,7 +21,7 @@ router.post('/login', login);
 router.get('/me',verificarToken, me);
 // Usar rutas modulares
 router.use('/profesionales',verificarToken, profesionalRouter);
-router.use('/usuarios',verificarToken, usuarioRouter);
+router.use('/usuarios', usuarioRouter);
 
 router.use('/metodos-pago', metodoPagorouter);
 
