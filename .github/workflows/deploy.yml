@@ -27,3 +27,12 @@ jobs:
           npm ci;
           NODE_ENV=production npm run build || echo "Sin build step para backend";
           pm2 restart trinidad-back || pm2 start npm --name "trinidad-back" -- run start;
+
+          # Deploy backend nuevo (trinilocal)
+          cd ${{ secrets.BACKEND_DEMO_WORK_DIR }};
+          git fetch;
+          git checkout -f ${{ secrets.MAIN_BRANCH }};
+          git pull;
+          npm ci;
+          NODE_ENV=production npm run build || echo "Sin build step para trinilocal";
+          pm2 restart demo || pm2 start npm --name "demo" -- run start;
