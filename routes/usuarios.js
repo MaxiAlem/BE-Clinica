@@ -12,8 +12,8 @@ import autorizarRol from '../middleware/autorizarRol.js';
 const usuarioRouter = Router();
 
 // Solo admin y secretario pueden crear usuarios
-usuarioRouter.post('/') //verificarToken, autorizarRol('secretario', 'admin'), crearUsuario);
-
+usuarioRouter.post('/' //verificarToken, autorizarRol('secretario', 'admin'), 
+,crearUsuario)
 // Solo admin y secretario pueden ver todos los usuarios
 usuarioRouter.get('/', verificarToken, autorizarRol('secretario', 'admin'), obtenerUsuarios);
 
