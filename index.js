@@ -19,7 +19,9 @@ app.use(cookieParser()); // Permite leer req.cookies
     'http://localhost:3000',
     'http://localhost:5173',
     'https://clinicatrinidad.org',
-    'https://www.clinicatrinidad.org'
+    'https://www.clinicatrinidad.org',
+    'https://fe-clinica-msyb.vercel.app/',
+    'https://www.fe-clinica-msyb.vercel.app/'
   ];
   
   app.use(cors({

@@ -45,7 +45,7 @@ Object.values(models).forEach((model) => {
 const syncModels = async () => {
   try {
     // Sincronizamos todos los modelos
-    await sequelize.sync({ alter: true }); // O false si ya está todo bien
+    await sequelize.sync({ alter: false }); // O false si ya está todo bien
   //  await seedObrasSociales();
   // await seedEspecialidades()
   //await generarRolesBase(); 
