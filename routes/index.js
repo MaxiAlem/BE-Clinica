@@ -10,6 +10,7 @@ import rolRouter from './rol.js';
 import { login,me } from '../controllers/authController.js';
 import { verificarToken } from '../middleware/auth.js';
 import diasLibreRouter from './diasLibre.js';
+import statRouter from './stats.js';
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ router.post('/login', login);
 router.get('/me',verificarToken, me);
 // Usar rutas modulares
 router.use('/profesionales',verificarToken, profesionalRouter);
+router.use('/stats',statRouter)
 router.use('/usuarios', usuarioRouter);
 
 router.use('/metodos-pago', metodoPagorouter);
