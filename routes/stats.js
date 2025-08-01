@@ -4,7 +4,10 @@
 import express from 'express';
 import {
     getPacientesPorEspecialidad,
+    getPacientesPorMes,
     getPacientesPorProfesional,
+    getPorcentajeCancelados,
+    getTendenciaTurnos,
     getTopObrasSociales
 
 } from '../controllers/statsController.js';
@@ -15,5 +18,8 @@ const statRouter = express.Router();
 statRouter.get('/pacientes-por-especialidad', getPacientesPorEspecialidad);
 statRouter.get('/pacientes-por-profesional', getPacientesPorProfesional);
 statRouter.get('/top-obras-sociales', getTopObrasSociales);
+statRouter.get('/tendencia-turnos', getTendenciaTurnos);
+statRouter.get('/tendencia-pacientes-nuevos', getPacientesPorMes);
+statRouter.get('/porcentaje-cancelados', getPorcentajeCancelados);
 
 export default statRouter;
