@@ -266,11 +266,17 @@ export const generarAgendaPDFPorProfesionalYDia = async (req, res) => {
     const startOfDay = new Date(`${fecha}T00:00:00`);
     const endOfDay = new Date(`${fecha}T23:59:59`);
 
+   
+    // Convertir a UTC para la consulta
+    const startOfDayUTC = new Date(startOfDay.getTime() - startOfDay.getTimezoneOffset() * 60000);
+    const endOfDayUTC = new Date(endOfDay.getTime() - endOfDay.getTimezoneOffset() * 60000);
+
+
     const turnos = await Turno.findAll({
       where: {
         profesionalId,
         start: {
-          [Op.between]: [startOfDay, endOfDay]
+          [Op.between]: [startOfDayUTC, endOfDayUTC]
         }
       },
       include: [
@@ -342,12 +348,34 @@ doc.font('ArchivoNarrow');
   
     doc.font('ArchivoNarrow').fontSize(10);
     posY += rowMinHeight;
+
+      // Función para formatear la hora en zona horaria local
+      const formatLocalTime = (date) => {
+        return new Date(date).toLocaleTimeString("es-AR", {
+          timeZone: 'America/Argentina/Buenos_Aires',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      };
+
+          // Función para calcular duración en zona horaria local
+    const calculateLocalDuration = (start, end) => {
+      const startLocal = new Date(start);
+      const endLocal = new Date(end);
+      const duracionMs = endLocal - startLocal;
+      return Math.round(duracionMs / 60000);
+    };
+
+
     turnos.forEach(turno => {
       posX = startX;
-      const hora = new Date(turno.start).toLocaleTimeString("es-AR", { hour: '2-digit', minute: '2-digit',
-      hour12: false });
-      const duracionMs = new Date(turno.end) - new Date(turno.start);
-      const duracionMin = Math.round(duracionMs / 60000);
+
+      // Usar las funciones de zona horaria local
+      const hora = formatLocalTime(turno.start);
+      const duracionMin = calculateLocalDuration(turno.start, turno.end);
+
+    
       const obraSocial = turno.ObraSocial?.nombre
   ? `${turno.ObraSocial.nombre}${turno.Paciente?.nAfiliado ? `  ( N°:${turno.Paciente.nAfiliado})` : ''}`
   : '';
