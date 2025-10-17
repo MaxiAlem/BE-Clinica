@@ -9,6 +9,7 @@ import metodoPagorouter from './metodosPago.js';
 import rolRouter from './rol.js';
 import { login,me } from '../controllers/authController.js';
 import { verificarToken } from '../middleware/auth.js';
+import { tenantMiddleware } from '../middleware/tenant.js';
 import diasLibreRouter from './diasLibre.js';
 import statRouter from './stats.js';
 
@@ -22,17 +23,17 @@ router.post('/login', login);
 router.get('/me',verificarToken, me);
 // Usar rutas modulares
 router.use('/profesionales',verificarToken, profesionalRouter);
-router.use('/stats',statRouter)
-router.use('/usuarios', usuarioRouter);
+router.use('/stats',verificarToken,statRouter)
+router.use('/usuarios', verificarToken,usuarioRouter);
 
-router.use('/metodos-pago', metodoPagorouter);
+router.use('/metodos-pago',verificarToken, metodoPagorouter);
 
-router.use('/pacientes', pacienteRouter);
-router.use('/turnos', turnoRouter);
-router.use('/obras-sociales', obraSocialRouter);
-router.use('/especialidad', especialidadRouter);
+router.use('/pacientes',verificarToken, pacienteRouter);
+router.use('/turnos', verificarToken,turnoRouter);
+router.use('/obras-sociales', verificarToken,obraSocialRouter);
+router.use('/especialidad', verificarToken,especialidadRouter);
 router.use('/roles', rolRouter);
-router.use('/dias-libres', diasLibreRouter);
+router.use('/dias-libres',verificarToken, diasLibreRouter);
 
 
 export default router;  

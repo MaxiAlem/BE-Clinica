@@ -31,7 +31,8 @@ export const crearDiaLibre = async (req, res) => {
       profesionalId
     });
 
-    return res.status(201).json(nuevoDiaLibre);
+    return res.status(200).json({ success: true, diaLibre: nuevoDiaLibre });
+
   } catch (error) {
     console.error('Error al crear día libre:', error);
     res.status(500).json({ error: 'Error del servidor.' });

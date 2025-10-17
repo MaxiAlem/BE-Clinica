@@ -32,9 +32,9 @@ app.use(cookieParser()); // Permite leer req.cookies
         callback(new Error('Not allowed by CORS'));
       }
     },
-    credentials: true,
+    credentials: true, // <--- OBLIGATORIO para cookies
     methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-  allowedHeaders: ['Content-Type'] 
+    allowedHeaders: ['Content-Type', 'Authorization'] // agrega Authorization por las dudas
   }));
 app.use(express.json());
 

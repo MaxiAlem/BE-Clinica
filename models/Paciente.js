@@ -36,7 +36,6 @@ const Paciente = sequelize.define('Paciente', {
   dni: {
     type: DataTypes.STRING,
     allowNull: true,
-    unique: true,
   },
   genero: {
     type: DataTypes.STRING,
@@ -56,23 +55,29 @@ const Paciente = sequelize.define('Paciente', {
   },
   obraSocialId: {
     type: DataTypes.INTEGER,
-    references: {
-      model: 'obras_sociales',
-      key: 'id',
-    },
     allowNull: true,
   },
   nAfiliado: {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  organizacionId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+  },
 }, {
-  paranoid: true, // Para borrado lógico (deletedAt)
-  timestamps: true, // createdAt, updatedAt
+  paranoid: true,
+  timestamps: true,
   tableName: 'pacientes',
+  indexes: [
+    {
+      unique: true,
+      fields: ['organizacionId', 'dni'], // Unicidad compuesta
+    },
+  ],
 });
 
-// Asociación pendiente (la armamos cuando tengas el modelo Turno listo)
 Paciente.associate = (models) => {
   Paciente.hasMany(models.Turno, {
     foreignKey: 'pacienteId',
@@ -81,6 +86,10 @@ Paciente.associate = (models) => {
   Paciente.belongsTo(models.ObraSocial, {
     foreignKey: 'obraSocialId',
     as: 'obraSocial',
+  });
+  Paciente.belongsTo(models.Organizacion, {
+    foreignKey: 'organizacionId',
+    as: 'organizacion',
   });
 };
 

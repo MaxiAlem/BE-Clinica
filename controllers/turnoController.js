@@ -7,23 +7,29 @@ import DiaLibre from '../models/DiasLibre.js';
 import PDFDocument from "pdfkit";
 import { Op } from "sequelize";
 
-/**
- * Crear un nuevo turno
- */
+// Helper DRY para el tenant
+const tenantScope = (req) => ({ organizacionId: req.user.organizacionId });
 
+
+
+// Crear un nuevo turno
 export const crearTurno = async (req, res) => {
   try {
-    const { start, end, profesionalId } = req.body;
-
+    const { start, end, profesionalId, pacienteId } = req.body;
     const fechaTurno = new Date(start);
 
-    // Buscar si cae en un día libre
+    // Verificar días libres a través del profesional
     const diaLibre = await DiaLibre.findOne({
       where: {
         profesionalId,
         fechaInicio: { [Op.lte]: fechaTurno },
         fechaFin: { [Op.gte]: fechaTurno }
-      }
+      },
+      include: [{
+        model: Profesional,
+        as: 'profesional',
+        where: { organizacionId: req.user.organizacionId } // <-- filtro por organización aquí
+      }]
     });
 
     if (diaLibre) {
@@ -34,8 +40,11 @@ export const crearTurno = async (req, res) => {
       });
     }
 
-    const turno = await Turno.create(req.body);
-    console.log("FECHA QUE LLEGA DEL FRONT:", start, end);
+    const turno = await Turno.create({
+      ...req.body,
+      organizacionId: req.user.organizacionId
+    });
+
     res.status(201).json(turno);
   } catch (err) {
     console.error("Error en crearTurno:", err);
@@ -43,19 +52,16 @@ export const crearTurno = async (req, res) => {
   }
 };
 
-/**
- * Obtener todos los turnos
- */
+
+// Obtener todos los turnos
 export const obtenerTurnos = async (req, res) => {
   try {
     const turnos = await Turno.findAll({
-      include: [{
-        model: Paciente,
-        as: 'Paciente'  // IMPORTANTE usar el alias aquí
-      },{
-        model: Profesional,
-        as: 'Profesional'  // IMPORTANTE usar el alias aquí
-      },]
+      where: tenantScope(req),
+      include: [
+        { model: Paciente, as: 'paciente' },
+        { model: Profesional, as: 'profesional' }
+      ]
     });
     res.json(turnos);
   } catch (err) {
@@ -63,22 +69,18 @@ export const obtenerTurnos = async (req, res) => {
   }
 };
 
-/**
- * Obtener un turno por ID
- */
+// Obtener un turno por ID
 export const obtenerTurnoPorId = async (req, res) => {
   try {
-    const turno = await Turno.findByPk(req.params.id, {
+    const turno = await Turno.findOne({
+      where: { id: req.params.id, ...tenantScope(req) },
       include: [
-        { model: Paciente, as: 'Paciente' },
-        { model: Profesional, as: 'Profesional' }
+        { model: Paciente, as: 'paciente' },
+        { model: Profesional, as: 'profesional' }
       ]
     });
-    
 
-    if (!turno) {
-      return res.status(404).json({ error: 'Turno no encontrado' });
-    }
+    if (!turno) return res.status(404).json({ error: 'Turno no encontrado' });
 
     res.json(turno);
   } catch (err) {
@@ -86,44 +88,21 @@ export const obtenerTurnoPorId = async (req, res) => {
   }
 };
 
-/**
- * Obtener turnos por paciente ID
- */
+// Obtener turnos por paciente
 export const obtenerTurnosPorPaciente = async (req, res) => {
   try {
     const { pacienteId } = req.params;
     const turnos = await Turno.findAll({
-      where: { pacienteId },
+      where: { pacienteId, ...tenantScope(req) },
       include: [
-        { 
+        {
           model: Profesional,
-          as: 'Profesional',
+          as: 'profesional',
           include: [{
             model: Especialidad,
             as: 'especialidades',
-            attributes: ['id', 'nombre'] // Solo traemos estos campos
+            attributes: ['id', 'nombre']
           }]
-        }
-      ],
-    });
-    res.json(turnos);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-/**
- * Obtener turnos por profesional ID
- */
- export const obtenerTurnosPorProfesional = async (req, res) => {
-  try {
-    const { profesionalId } = req.params;
-    const turnos = await Turno.findAll({
-      where: { profesionalId },
-      include: [
-        {
-          model: Paciente,
-          as: 'Paciente'  
         }
       ]
     });
@@ -133,27 +112,44 @@ export const obtenerTurnosPorPaciente = async (req, res) => {
   }
 };
 
-/**
- * Obtener turnos por día (rango desde 00:00 hasta 23:59)
- */
+// Obtener turnos por profesional
+export const obtenerTurnosPorProfesional = async (req, res) => {
+  try {
+    const { profesionalId } = req.params;
+    const turnos = await Turno.findAll({
+      where: { profesionalId, ...tenantScope(req) },
+      include: [
+        { model: Paciente, as: 'paciente' },    { 
+          model: ObraSocial, 
+          as: 'obraSocial', 
+          attributes: ['nombre'] // solo traer el nombre
+        }
+      ]
+    });
+    res.json(turnos);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Obtener turnos por día
 export const obtenerTurnosPorDia = async (req, res) => {
   try {
-    const { fecha } = req.query; // formato esperado: YYYY-MM-DD
-
-    if (!fecha) {
-      return res.status(400).json({ error: 'Se requiere una fecha en query param' });
-    }
+    const { fecha } = req.query;
+    if (!fecha) return res.status(400).json({ error: 'Se requiere una fecha en query param' });
 
     const startOfDay = new Date(`${fecha}T00:00:00`);
     const endOfDay = new Date(`${fecha}T23:59:59`);
 
     const turnos = await Turno.findAll({
       where: {
-        fechaHora: {
-          [Op.between]: [startOfDay, endOfDay]
-        }
+        fechaHora: { [Op.between]: [startOfDay, endOfDay] },
+        ...tenantScope(req)
       },
-      include: [Paciente, Profesional]
+      include: [
+        { model: Paciente, as: 'paciente' },
+        { model: Profesional, as: 'profesional' }
+      ]
     });
 
     res.json(turnos);
@@ -161,18 +157,13 @@ export const obtenerTurnosPorDia = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-/**
- * Obtener turnos por profesional y día (agenda del profesional para ese día)
- * GET /profesionales/:profesionalId/turnos-dia?fecha=YYYY-MM-DD
- */
- export const obtenerTurnosPorProfesionalYDia = async (req, res) => {
+
+// Obtener turnos por profesional y día
+export const obtenerTurnosPorProfesionalYDia = async (req, res) => {
   try {
     const { profesionalId } = req.params;
-    const { fecha } = req.query; // formato esperado: YYYY-MM-DD
-
-    if (!fecha) {
-      return res.status(400).json({ error: 'Se requiere una fecha en query param (YYYY-MM-DD)' });
-    }
+    const { fecha } = req.query;
+    if (!fecha) return res.status(400).json({ error: 'Se requiere fecha' });
 
     const startOfDay = new Date(`${fecha}T00:00:00`);
     const endOfDay = new Date(`${fecha}T23:59:59`);
@@ -180,19 +171,12 @@ export const obtenerTurnosPorDia = async (req, res) => {
     const turnos = await Turno.findAll({
       where: {
         profesionalId,
-        fechaHora: {
-          [Op.between]: [startOfDay, endOfDay]
-        }
+        fechaHora: { [Op.between]: [startOfDay, endOfDay] },
+        ...tenantScope(req)
       },
       include: [
-        {
-          model: Paciente,
-          as: 'Paciente'
-        },
-        {
-          model: Profesional,
-          as: 'Profesional'
-        }
+        { model: Paciente, as: 'paciente' },
+        { model: Profesional, as: 'profesional' }
       ],
       order: [['fechaHora', 'ASC']]
     });
@@ -203,15 +187,11 @@ export const obtenerTurnosPorDia = async (req, res) => {
   }
 };
 
-/**
- * Actualizar un turno
- */
+// Actualizar un turno
 export const actualizarTurno = async (req, res) => {
   try {
-    const turno = await Turno.findByPk(req.params.id);
-    if (!turno) {
-      return res.status(404).json({ error: 'Turno no encontrado' });
-    }
+    const turno = await Turno.findOne({ where: { id: req.params.id, ...tenantScope(req) } });
+    if (!turno) return res.status(404).json({ error: 'Turno no encontrado' });
 
     await turno.update(req.body);
     res.json(turno);
@@ -220,15 +200,11 @@ export const actualizarTurno = async (req, res) => {
   }
 };
 
-/**
- * Eliminar (soft-delete) un turno
- */
+// Eliminar un turno
 export const eliminarTurno = async (req, res) => {
   try {
-    const turno = await Turno.findByPk(req.params.id);
-    if (!turno) {
-      return res.status(404).json({ error: 'Turno no encontrado' });
-    }
+    const turno = await Turno.findOne({ where: { id: req.params.id, ...tenantScope(req) } });
+    if (!turno) return res.status(404).json({ error: 'Turno no encontrado' });
 
     await turno.destroy();
     res.json({ message: 'Turno eliminado' });
@@ -237,15 +213,11 @@ export const eliminarTurno = async (req, res) => {
   }
 };
 
-/**
- * Restaurar un turno eliminado
- */
+// Restaurar un turno eliminado
 export const restaurarTurno = async (req, res) => {
   try {
-    const turno = await Turno.findByPk(req.params.id, { paranoid: false });
-    if (!turno) {
-      return res.status(404).json({ error: 'Turno no encontrado' });
-    }
+    const turno = await Turno.findOne({ where: { id: req.params.id, ...tenantScope(req) }, paranoid: false });
+    if (!turno) return res.status(404).json({ error: 'Turno no encontrado' });
 
     await turno.restore();
     res.json({ message: 'Turno restaurado', turno });
@@ -254,42 +226,31 @@ export const restaurarTurno = async (req, res) => {
   }
 };
 
+// Generar PDF por profesional y día (mismo tenant)
 export const generarAgendaPDFPorProfesionalYDia = async (req, res) => {
   try {
     const { profesionalId } = req.params;
-    const { fecha } = req.query; // formato esperado: YYYY-MM-DD
-
-    if (!fecha) {
-      return res.status(400).json({ error: 'Se requiere una fecha en query param (YYYY-MM-DD)' });
-    }
+    const { fecha } = req.query;
+    if (!fecha) return res.status(400).json({ error: 'Se requiere fecha' });
 
     const startOfDay = new Date(`${fecha}T00:00:00`);
     const endOfDay = new Date(`${fecha}T23:59:59`);
 
-   
-    // Convertir a UTC para la consulta
-    const startOfDayUTC = new Date(startOfDay.getTime() - startOfDay.getTimezoneOffset() * 60000);
-    const endOfDayUTC = new Date(endOfDay.getTime() - endOfDay.getTimezoneOffset() * 60000);
-
-
     const turnos = await Turno.findAll({
       where: {
         profesionalId,
-        start: {
-          [Op.between]: [startOfDayUTC, endOfDayUTC]
-        }
+        start: { [Op.between]: [startOfDay, endOfDay] },
+        ...tenantScope(req)
       },
       include: [
-        { model: Paciente, as: 'Paciente' },
-        { model: Profesional, as: 'Profesional' },
-        { model: ObraSocial, as: 'ObraSocial' }
+        { model: Paciente, as: 'paciente' },
+        { model: Profesional, as: 'profesional' },
+        { model: ObraSocial, as: 'obraSocial' }
       ],
       order: [['start', 'ASC']]
     });
 
-    if (!turnos.length) {
-      return res.status(404).json({ error: "No hay turnos para ese día" });
-    }
+    if (!turnos.length) return res.status(404).json({ error: "No hay turnos para ese día" });
 
     // Configuración de columnas (proporciones ajustadas)
     const columns = [

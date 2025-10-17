@@ -1,71 +1,70 @@
 import MetodoPago from '../models/MetodoPago.js';
 
-// @desc    Obtener todos los métodos de pago
-// @route   GET /api/metodos-pago
-// @access  Privado/Admin
-const obtenerMetodosPago = async (req, res) => {
+// Helper DRY para el tenant
+const tenantScope = (req) => ({ organizacionId: req.user.organizacionId });
+
+/**
+ * Obtener todos los métodos de pago activos de una organización
+ */
+export const obtenerMetodosPago = async (req, res) => {
   try {
+
+
     const metodos = await MetodoPago.findAll({
-      where: { activo: true },
+      where: { activo: true, organizacionId: req.organizacionId  },
       order: [['nombre', 'ASC']]
     });
-    res.json(metodos);
+
+    res.status(200).json(metodos);
   } catch (error) {
     console.error('Error al obtener métodos de pago:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    res.status(500).json({ error: 'Error interno del servidor', detalle: error.message });
   }
 };
 
-// @desc    Crear un nuevo método de pago
-// @route   POST /api/metodos-pago
-// @access  Privado/Admin
-const crearMetodoPago = async (req, res) => {
-  const { nombre, descripcion } = req.body;
-
+/**
+ * Crear un nuevo método de pago para una organización
+ */
+export const crearMetodoPago = async (req, res) => {
   try {
-    // Validación básica
-    if (!nombre) {
-      return res.status(400).json({ error: 'El nombre es obligatorio' });
-    }
+    const { nombre, descripcion, organizacionId } = req.body;
 
-    // Verificar si ya existe
-    const metodoExistente = await MetodoPago.findOne({ where: { nombre } });
-    if (metodoExistente) {
-      return res.status(400).json({ error: 'Este método de pago ya existe' });
-    }
+    if (!nombre) return res.status(400).json({ error: 'El nombre es obligatorio' });
+
+
+    // Validar nombre único por organización
+    const existente = await MetodoPago.findOne({ where: { nombre, organizacionId: req.organizacionId } });
+    if (existente) return res.status(400).json({ error: 'Este método de pago ya existe en la organización' });
 
     const metodo = await MetodoPago.create({
       nombre,
       descripcion: descripcion || null,
-      activo: true
+      activo: true,
+      organizacionId
     });
 
     res.status(201).json(metodo);
   } catch (error) {
     console.error('Error al crear método de pago:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    res.status(500).json({ error: 'Error interno del servidor', detalle: error.message });
   }
 };
 
-// @desc    Actualizar un método de pago
-// @route   PUT /api/metodos-pago/:id
-// @access  Privado/Admin
-const actualizarMetodoPago = async (req, res) => {
-  const { id } = req.params;
-  const { nombre, descripcion, activo } = req.body;
-
+/**
+ * Actualizar un método de pago
+ */
+export const actualizarMetodoPago = async (req, res) => {
   try {
-    const metodo = await MetodoPago.findByPk(id);
-    if (!metodo) {
-      return res.status(404).json({ error: 'Método de pago no encontrado' });
-    }
+    const { id } = req.params;
+    const { nombre, descripcion, activo, organizacionId } = req.body;
 
-    // Validar nombre único (si se está modificando)
+    const metodo = await MetodoPago.findByPk(id);
+    if (!metodo) return res.status(404).json({ error: 'Método de pago no encontrado' });
+
+    // Validar nombre único por organización si se cambia
     if (nombre && nombre !== metodo.nombre) {
-      const metodoExistente = await MetodoPago.findOne({ where: { nombre } });
-      if (metodoExistente) {
-        return res.status(400).json({ error: 'Este nombre ya está en uso' });
-      }
+      const existente = await MetodoPago.findOne({ where: { nombre, organizacionId: metodo.organizacionId,tenantScope } });
+      if (existente) return res.status(400).json({ error: 'Este nombre ya está en uso en la organización' });
     }
 
     await metodo.update({
@@ -74,38 +73,28 @@ const actualizarMetodoPago = async (req, res) => {
       activo: activo !== undefined ? activo : metodo.activo
     });
 
-    res.json(metodo);
+    res.status(200).json(metodo);
   } catch (error) {
     console.error('Error al actualizar método de pago:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    res.status(500).json({ error: 'Error interno del servidor', detalle: error.message });
   }
 };
 
-// @desc    Eliminar (desactivar) un método de pago
-// @route   DELETE /api/metodos-pago/:id
-// @access  Privado/Admin
-const eliminarMetodoPago = async (req, res) => {
-  const { id } = req.params;
-
+/**
+ * Desactivar un método de pago
+ */
+export const eliminarMetodoPago = async (req, res) => {
   try {
-    const metodo = await MetodoPago.findByPk(id);
-    if (!metodo) {
-      return res.status(404).json({ error: 'Método de pago no encontrado' });
-    }
+    const { id } = req.params;
 
-    // Borrado lógico (cambiar a activo: false)
+    const metodo = await MetodoPago.findByPk(id);
+    if (!metodo) return res.status(404).json({ error: 'Método de pago no encontrado' });
+
     await metodo.update({ activo: false });
 
-    res.json({ mensaje: 'Método de pago desactivado correctamente' });
+    res.status(200).json({ mensaje: 'Método de pago desactivado correctamente' });
   } catch (error) {
     console.error('Error al eliminar método de pago:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    res.status(500).json({ error: 'Error interno del servidor', detalle: error.message });
   }
-};
-
-export {
-  obtenerMetodosPago,
-  crearMetodoPago,
-  actualizarMetodoPago,
-  eliminarMetodoPago
 };

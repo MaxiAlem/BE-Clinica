@@ -3,12 +3,15 @@ import Rol from '../models/Role.js';
 import Profesional from '../models/Profesional.js';
 import bcrypt from 'bcrypt';
 
+// Helper DRY para el tenant
+const tenantScope = (req) => ({ organizacionId: req.user.organizacionId });
+
 // Crear un nuevo usuario
 export const crearUsuario = async (req, res) => {
   try {
-    const { usuario, password, rolId, profesionales } = req.body; // profesionales: [id, id, ...]
+    const { usuario, password, rolId, profesionales } = req.body;
 
-    const usuarioExistente = await Usuario.findOne({ where: { usuario } });
+    const usuarioExistente = await Usuario.findOne({ where: { usuario, ...tenantScope(req) } });
     if (usuarioExistente) {
       return res.status(400).json({ mensaje: 'El nombre de usuario ya está en uso' });
     }
@@ -18,18 +21,17 @@ export const crearUsuario = async (req, res) => {
       usuario,
       password: hashedPassword,
       rolId,
+      organizacionId: req.user.organizacionId, // 💥 asignación tenant
     });
 
-    // Si hay profesionales para asociar
     if (profesionales && profesionales.length > 0) {
-      await nuevoUsuario.setProfesionales(profesionales); // método mágico de Sequelize N a N
+      await nuevoUsuario.setProfesionales(profesionales);
     }
 
-    // Incluimos los profesionales asociados en la respuesta
     const usuarioCompleto = await Usuario.findByPk(nuevoUsuario.id, {
       include: [
         { model: Rol, as: 'rol' },
-        { model: Profesional, as: 'profesionales' }
+        { model: Profesional, as: 'profesional' }
       ]
     });
 
@@ -44,9 +46,10 @@ export const crearUsuario = async (req, res) => {
 export const obtenerUsuarios = async (req, res) => {
   try {
     const usuarios = await Usuario.findAll({
+      where: tenantScope(req),
       include: [
         { model: Rol, as: 'rol' },
-        { model: Profesional, as: 'profesionales' }
+        { model: Profesional, as: 'profesional' }
       ]
     });
     res.json(usuarios);
@@ -59,10 +62,11 @@ export const obtenerUsuarios = async (req, res) => {
 export const obtenerUsuarioPorId = async (req, res) => {
   try {
     const { id } = req.params;
-    const usuario = await Usuario.findByPk(id, {
+    const usuario = await Usuario.findOne({
+      where: { id, ...tenantScope(req) },
       include: [
         { model: Rol, as: 'rol' },
-        { model: Profesional, as: 'profesionales' }
+        { model: Profesional, as: 'profesional' }
       ]
     });
 
@@ -80,28 +84,24 @@ export const actualizarUsuario = async (req, res) => {
     const { id } = req.params;
     const { usuario, password, rolId, profesionales } = req.body;
 
-    const user = await Usuario.findByPk(id);
+    const user = await Usuario.findOne({ where: { id, ...tenantScope(req) } });
     if (!user) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
 
     const updatedData = {};
     if (usuario !== undefined) updatedData.usuario = usuario;
     if (rolId !== undefined) updatedData.rolId = rolId;
-    if (password) {
-      updatedData.password = await bcrypt.hash(password, 10);
-    }
+    if (password) updatedData.password = await bcrypt.hash(password, 10);
 
     await user.update(updatedData);
 
-    // Si envían profesionales, actualizamos la relación
     if (profesionales) {
-      await user.setProfesionales(profesionales); // actualiza la tabla intermedia
+      await user.setProfesionales(profesionales);
     }
 
-    // Incluimos los profesionales asociados en la respuesta
     const usuarioCompleto = await Usuario.findByPk(user.id, {
       include: [
         { model: Rol, as: 'rol' },
-        { model: Profesional, as: 'profesionales' }
+        { model: Profesional, as: 'profesional' }
       ]
     });
 
@@ -115,7 +115,7 @@ export const actualizarUsuario = async (req, res) => {
 export const eliminarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
-    const usuario = await Usuario.findByPk(id);
+    const usuario = await Usuario.findOne({ where: { id, ...tenantScope(req) } });
 
     if (!usuario) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
 

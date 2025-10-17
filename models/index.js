@@ -13,6 +13,7 @@ import MetodoPago from './MetodoPago.js';
 import ProfesionalEspecialidad from './ProfesEspecialidad.js';
 import DiaLibre from './DiasLibre.js'; 
 import UsuarioProfesional from './UsuarioProfesional.js';
+import Organizacion from './Organizacion.js';
 
 //import seedObrasSociales from '../seeders/22052025-obras-sociales.js';
 //import seedEspecialidades from '../seeders/22052025-especialidades.js';
@@ -31,7 +32,8 @@ const models = {
   MetodoPago,
   ProfesionalEspecialidad,
   DiaLibre,
-  UsuarioProfesional
+  UsuarioProfesional,
+  Organizacion
 };
 
 // Ejecutar las asociaciones
@@ -45,7 +47,7 @@ Object.values(models).forEach((model) => {
 const syncModels = async () => {
   try {
     // Sincronizamos todos los modelos
-    await sequelize.sync({ alter: false }); // O false si ya está todo bien
+    await sequelize.sync({ alter: true }); // O false si ya está todo bien /pasar en la db los campos de turnos pacienteid y porfid a allow null
   //  await seedObrasSociales();
   // await seedEspecialidades()
   //await generarRolesBase(); 

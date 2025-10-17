@@ -18,7 +18,11 @@ export const login = async (req, res) => {
     if (!passwordValido) return res.status(401).json({ mensaje: 'Contraseña incorrecta' });
 
     const token = jwt.sign(
-      { id: user.id, rol: user.rol.nombre }, // crea un JWT que contiene el id y el rol
+      {
+        id: user.id,
+        rol: user.rol.nombre,
+        organizacionId: user.organizacionId,
+      }, // crea un JWT que contiene el id y el rol y organizacionID
       process.env.JWT_SECRET,
       { expiresIn: '100h' }
     );
@@ -35,6 +39,7 @@ export const login = async (req, res) => {
     res.status(200).json({ 
       usuario: user.usuario, 
       rol: user.rol.nombre,
+      organizacionId: user.organizacionId, //puede servirle al front la datita rica
       mensaje: 'Login exitoso'
     });
     // No pongas nada más después de esto

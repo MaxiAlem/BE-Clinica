@@ -14,12 +14,10 @@ const Profesional = sequelize.define('Profesional', {
   cuil: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true
   },
   dni: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true
   },
   matricula: {
     type: DataTypes.STRING,
@@ -31,22 +29,17 @@ const Profesional = sequelize.define('Profesional', {
     defaultValue: 15, // Tiempo de turno en minutos
     comment: "Duración base del turno en minutos"
   },
-  // especialidadId: {
-  //      type: DataTypes.INTEGER,
-  //      allowNull: false,
-  //      references: {
-  //        model: 'especialidades',
-  //        key: 'id',
-  //      },
-  //    },
+
   titulo: {
     type: DataTypes.STRING, // Este campo es opcional
     allowNull: true
   },
-   slug: {
+  slug: {
     type: DataTypes.STRING,
-    allowNull: true,
-    unique: true
+    allowNull: false,
+    validate: {
+      is: /^[a-z0-9]+(?:-[a-z0-9]+)*$/ // formato slug
+    }
   },
   activo: {
     type: DataTypes.BOOLEAN,
@@ -74,11 +67,34 @@ const Profesional = sequelize.define('Profesional', {
   fechaNacimiento: {
     type: DataTypes.DATEONLY,
     allowNull: true
+  },
+  organizacionId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+    references: {
+      model: 'organizaciones',
+      key: 'id'
+    }
   }
 }, {
   paranoid: true, // soft deletes: agrega deletedAt
   timestamps: true, // createdAt / updatedAt
   tableName: 'profesionales', // nombre en base de datos
+  indexes: [
+    {
+      unique: true,
+      fields: ['slug', 'organizacionId']
+    },
+    {
+      unique: true,
+      fields: ['dni', 'organizacionId']
+    },
+    {
+      unique: true,
+      fields: ['cuil', 'organizacionId']
+    }
+  ]
 });
 
 // Relacionar con la tabla de Disponibilidad (más adelante)
@@ -108,14 +124,14 @@ Profesional.belongsToMany(models.Usuario, {
   otherKey: 'usuarioId',
   as: 'usuarios'
 });
-
+  Profesional.belongsTo(models.Organizacion, {
+    foreignKey: 'organizacionId',
+    as: 'organizacion'
+  });
 };
 
-
-
-
-
-Profesional.beforeCreate(async (profesional, options) => {
+// Hook para slug único
+Profesional.beforeCreate(async (profesional) => {
   if (!profesional.slug && profesional.nombre && profesional.apellido) {
     const baseSlug = `${profesional.nombre}-${profesional.apellido}`
       .toLowerCase()
@@ -125,13 +141,14 @@ Profesional.beforeCreate(async (profesional, options) => {
     let slug = baseSlug;
     let contador = 1;
 
-    // Verificamos si ya existe el slug
-    while (
-      await Profesional.findOne({
-        where: { slug },
-        paranoid: false // Incluye eliminados soft
-      })
-    ) {
+    const existe = async (slugTest) => {
+      return await Profesional.findOne({
+        where: { slug: slugTest, organizacionId: profesional.organizacionId },
+        paranoid: false
+      });
+    };
+
+    while (await existe(slug)) {
       slug = `${baseSlug}-${contador++}`;
     }
 

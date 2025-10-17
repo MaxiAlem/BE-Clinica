@@ -9,12 +9,21 @@ const MetodoPago = sequelize.define('MetodoPago', {
   },
   descripcion: {
     type: DataTypes.TEXT,
-    allowNull: true
+    allowNull: true,
   },
   activo: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
-    defaultValue: true
+    defaultValue: true,
+  },
+  organizacionId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+    references: {
+      model: 'organizaciones',
+      key: 'id'
+    }
   }
 }, {
   paranoid: true,
@@ -22,11 +31,13 @@ const MetodoPago = sequelize.define('MetodoPago', {
   tableName: 'metodos_pago',
 });
 
-// MetodoPago.associate = (models) => {
-//     MetodoPago.hasMany(models.Turno, {
-//     foreignKey: 'metodoId',
-//     as: 'turnos',
-//   });
-// };
+// Asociaciones
+MetodoPago.associate = (models) => {
+  MetodoPago.belongsTo(models.Organizacion, {
+    foreignKey: 'organizacionId',
+    as: 'organizacion'
+  });
+  // MetodoPago.hasMany(models.Turno, { foreignKey: 'metodoId', as: 'turnos' });
+};
 
 export default MetodoPago;
