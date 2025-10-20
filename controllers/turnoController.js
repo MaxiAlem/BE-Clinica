@@ -276,7 +276,7 @@ export const generarAgendaPDFPorProfesionalYDia = async (req, res) => {
     doc.pipe(res);
 
     // Encabezado
-    const profesional = turnos[0].Profesional;
+    const profesional = turnos[0].profesional;
     doc.fontSize(16).text(`Agenda de ${profesional.nombre} ${profesional.apellido}`, { align: 'center' });
     doc.fontSize(10).text(`Fecha: ${fecha}`, { align: 'center' });
     doc.moveDown(0);
@@ -337,11 +337,11 @@ doc.font('ArchivoNarrow');
       const duracionMin = calculateLocalDuration(turno.start, turno.end);
 
     
-      const obraSocial = turno.ObraSocial?.nombre
-  ? `${turno.ObraSocial.nombre}${turno.Paciente?.nAfiliado ? `  ( N°:${turno.Paciente.nAfiliado})` : ''}`
+      const obraSocial = turno.obraSocial?.nombre
+  ? `${turno.obraSocial.nombre}${turno.paciente?.nAfiliado ? `  ( N°:${turno.paciente.nAfiliado})` : ''}`
   : '';
 
-      const paciente = `${turno.Paciente?.nombre || ''} ${turno.Paciente?.apellido || ''}  (DNI:${turno.Paciente?.dni || 'sin DNI'})`;
+      const paciente = `${turno.paciente?.nombre || ''} ${turno.paciente?.apellido || ''}  (DNI:${turno.paciente?.dni || 'sin DNI'})`;
       const costoTotal = turno.costoTotal !== undefined ? `$${turno.costoTotal}` : '';
       const sena = turno.sena !== undefined ? `$${turno.sena}` : '';
       const motivo = turno.motivo || '';

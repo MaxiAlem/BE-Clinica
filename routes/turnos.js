@@ -16,12 +16,12 @@ import {
 const turnoRouter = express.Router();
 
 // Filtros primero
-turnoRouter.get('/paciente/:pacienteId', obtenerTurnosPorPaciente);
-turnoRouter.get('/profesional/:profesionalId', obtenerTurnosPorProfesional);
+
 turnoRouter.get('/fecha/dia', obtenerTurnosPorDia); // ?fecha=YYYY-MM-DD
 turnoRouter.get('/profesional/:profesionalId/turnos-dia', obtenerTurnosPorProfesionalYDia);
 turnoRouter.get('/profesional/:profesionalId/dia/pdf', generarAgendaPDFPorProfesionalYDia);
-
+turnoRouter.get('/paciente/:pacienteId', obtenerTurnosPorPaciente);
+turnoRouter.get('/profesional/:profesionalId', obtenerTurnosPorProfesional);
 // CRUD
 turnoRouter.post('/', crearTurno);
 turnoRouter.get('/', obtenerTurnos);
