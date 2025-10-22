@@ -41,6 +41,7 @@ app.use(express.json());
 // Rutas
 app.use('/api', routes);// para local
 //app.use('/', routes); //para servidor
+app.get('/', (req, res) => res.send('OK'));
 
 
 app.listen(PORT, async () => {
