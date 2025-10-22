@@ -36,7 +36,7 @@ const Profesional = sequelize.define('Profesional', {
   },
   slug: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     validate: {
       is: /^[a-z0-9]+(?:-[a-z0-9]+)*$/ // formato slug
     }
