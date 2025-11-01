@@ -8,7 +8,8 @@ import {
     getPacientesPorProfesional,
     getPorcentajeCancelados,
     getTendenciaTurnos,
-    getTopObrasSociales
+    getTopObrasSociales,
+    getPacientesPorObraSocialYProfesional
 
 } from '../controllers/statsController.js';
 
@@ -21,5 +22,6 @@ statRouter.get('/top-obras-sociales', getTopObrasSociales);
 statRouter.get('/tendencia-turnos', getTendenciaTurnos);
 statRouter.get('/tendencia-pacientes-nuevos', getPacientesPorMes);
 statRouter.get('/porcentaje-cancelados', getPorcentajeCancelados);
+statRouter.get('/pacientes-obra-social-profesional', getPacientesPorObraSocialYProfesional);
 
 export default statRouter;

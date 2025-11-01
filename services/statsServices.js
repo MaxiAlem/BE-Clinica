@@ -58,32 +58,68 @@ export const fetchPacientesPorProfesional = async ({ startDate, endDate } = {}) 
 };
 
 
-export const fetchTopObrasSociales= async ({ startDate, endDate } = {}) => {
-
-  let whereClause = '';
+export const fetchTopObrasSociales = async ({ startDate, endDate, organizacionId, obrasSociales = [] }) => {
+  let whereClause = ['t.organizacionId = :organizacionId'];
+  const replacements = { organizacionId };
 
   if (startDate && endDate) {
-    whereClause = `WHERE t.start BETWEEN :startDate AND :endDate`;
+    whereClause.push(`t.start BETWEEN :startDate AND :endDate`);
+    replacements.startDate = startDate;
+    replacements.endDate = endDate;
   }
 
-  const query = `
-  SELECT 
-  o.nombre AS obra_social,
-  COUNT(t.id) AS cantidad_turnos
-FROM turnos t
-JOIN obras_sociales o ON t.obraSocialId = o.id
-${whereClause}
-GROUP BY o.id, o.nombre
-ORDER BY cantidad_turnos DESC
-LIMIT 15;
+  if (obrasSociales.length > 0) {
+    whereClause.push(`o.id IN (:obrasSociales)`);
+    replacements.obrasSociales = obrasSociales;
+  }
 
+  const whereSQL = whereClause.length ? `WHERE ${whereClause.join(' AND ')}` : '';
+
+  const query = `
+    SELECT 
+      o.id,
+      o.nombre AS obra_social,
+      COUNT(t.id) AS cantidad_turnos
+    FROM turnos t
+    JOIN obras_sociales o ON t.obraSocialId = o.id
+    ${whereSQL}
+    GROUP BY o.id, o.nombre
+    ORDER BY cantidad_turnos DESC
+    LIMIT 15;
   `;
 
-  const result = await sequelize.query(query, {
-    replacements: { startDate, endDate },
-  });
-  return result[0];
+  const [results] = await sequelize.query(query, { replacements });
+  return results;
 };
+export const fetchPacientesPorObraSocialYProfesional = async ({ startDate, endDate, organizacionId }) => {
+  const replacements = { organizacionId };
+  const whereClause = ['t.organizacionId = :organizacionId'];
+
+  if (startDate && endDate) {
+    whereClause.push('t.start BETWEEN :startDate AND :endDate');
+    replacements.startDate = startDate;
+    replacements.endDate = endDate;
+  }
+
+  const whereSQL = `WHERE ${whereClause.join(' AND ')}`;
+
+  const query = `
+    SELECT 
+      CONCAT(p.nombre, ' ', p.apellido) AS profesional,
+      COALESCE(o.nombre, 'Particular') AS obra_social,
+      COUNT(DISTINCT t.pacienteId) AS cantidad_pacientes
+    FROM turnos t
+    LEFT JOIN profesionales p ON t.profesionalId = p.id
+    LEFT JOIN obras_sociales o ON t.obraSocialId = o.id
+    ${whereSQL}
+    GROUP BY p.id, p.nombre, p.apellido, o.id, o.nombre
+    ORDER BY cantidad_pacientes DESC;
+  `;
+
+  const [results] = await sequelize.query(query, { replacements, logging: false });
+  return results;
+};
+
 export const fetchTendenciaTurnos= async () => {
   const query = `
   SELECT

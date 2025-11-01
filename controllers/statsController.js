@@ -4,7 +4,8 @@ import {
   fetchPacientesPorProfesional, 
   fetchPorcentajeCancelados, 
   fetchTendenciaTurnos, 
-  fetchTopObrasSociales 
+  fetchTopObrasSociales,
+  fetchPacientesPorObraSocialYProfesional
 } from '../services/statsServices.js';
 
 export const getPacientesPorEspecialidad = async (req, res) => {
@@ -29,11 +30,37 @@ export const getPacientesPorProfesional = async (req, res) => {
 
 export const getTopObrasSociales = async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
-    const data = await fetchTopObrasSociales({ startDate, endDate, organizacionId: req.user.organizacionId });
+    const { startDate, endDate, obrasSociales } = req.query;
+    const { organizacionId } = req.user;
+
+    const obrasArray = obrasSociales ? obrasSociales.split(',') : [];
+
+    const data = await fetchTopObrasSociales({
+      startDate,
+      endDate,
+      organizacionId,
+      obrasSociales: obrasArray,
+    });
+
     res.json(data);
   } catch (error) {
+    console.error('Error obteniendo top obras sociales:', error);
     res.status(500).json({ error: 'Error obteniendo datos' });
+  }
+};
+
+export const getPacientesPorObraSocialYProfesional = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const data = await fetchPacientesPorObraSocialYProfesional({
+      startDate,
+      endDate,
+      organizacionId: req.user.organizacionId,
+    });
+    res.json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error obteniendo datos de pacientes' });
   }
 };
 
