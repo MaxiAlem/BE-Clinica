@@ -39,7 +39,7 @@ app.use(cookieParser()); // Permite leer req.cookies
 app.use(express.json());
 
 // Rutas
-app.use('/api', routes);// para local
+app.use('/api', routes);// para local123
 //app.use('/', routes); //para servidor
 app.get('/', (req, res) => res.send('OK'));
 
