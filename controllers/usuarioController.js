@@ -31,7 +31,7 @@ export const crearUsuario = async (req, res) => {
     const usuarioCompleto = await Usuario.findByPk(nuevoUsuario.id, {
       include: [
         { model: Rol, as: 'rol' },
-        { model: Profesional, as: 'profesional' }
+        { model: Profesional, as: 'profesionales' }
       ]
     });
 
@@ -66,7 +66,7 @@ export const obtenerUsuarioPorId = async (req, res) => {
       where: { id, ...tenantScope(req) },
       include: [
         { model: Rol, as: 'rol' },
-        { model: Profesional, as: 'profesional' }
+        { model: Profesional, as: 'profesionales' }
       ]
     });
 
@@ -101,7 +101,7 @@ export const actualizarUsuario = async (req, res) => {
     const usuarioCompleto = await Usuario.findByPk(user.id, {
       include: [
         { model: Rol, as: 'rol' },
-        { model: Profesional, as: 'profesional' }
+        { model: Profesional, as: 'profesionales' }
       ]
     });
 
