@@ -64,10 +64,6 @@ const Turno = sequelize.define('Turno', {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
-  derivacionProfesionalId: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-  },
 }, {
   paranoid: true, // habilita soft delete
   timestamps: true,
@@ -94,16 +90,6 @@ Turno.associate = (models) => {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
   });
-
-  Turno.belongsTo(models.Profesional, {
-    foreignKey: {
-      name: 'derivacionProfesionalId',
-      allowNull: true,
-    },
-    as: '¨derivacionProfesional',
-    onDelete: 'SET NULL',
-    onUpdate: 'CASCADE',
-  }); 
 
   Turno.belongsTo(models.ObraSocial, {
     foreignKey: {
