@@ -4,7 +4,7 @@ import Profesional from '../models/Profesional.js';
 import bcrypt from 'bcrypt';
 
 // Helper DRY para el tenant
-const tenantScope = (req) => ({ organizacionId: req.user.organizacionId });
+const tenantScope = (req) => ({ organizacionId: req.organizacionId });
 
 // Crear un nuevo usuario
 export const crearUsuario = async (req, res) => {
@@ -21,7 +21,7 @@ export const crearUsuario = async (req, res) => {
       usuario,
       password: hashedPassword,
       rolId,
-      organizacionId: req.user.organizacionId, // 💥 asignación tenant
+      organizacionId: req.organizacionId, // 💥 asignación tenant
     });
 
     if (profesionales && profesionales.length > 0) {
@@ -49,7 +49,7 @@ export const obtenerUsuarios = async (req, res) => {
       where: tenantScope(req),
       include: [
         { model: Rol, as: 'rol' },
-        { model: Profesional, as: 'profesional' }
+        { model: Profesional, as: 'profesionales' }
       ]
     });
     res.json(usuarios);

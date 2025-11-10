@@ -27,7 +27,7 @@ const FacturacionInterna = sequelize.define(
       allowNull: false 
     },
     total: { 
-      type: DataTypes.DECIMAL(10, 2), 
+      type: DataTypes.DECIMAL(20, 2), 
       allowNull: false, 
       defaultValue: 0 
     },
