@@ -6,19 +6,19 @@ import ObraSocial from "../models/ObraSocial.js";
 import DiaLibre from '../models/DiasLibre.js';
 import PDFDocument from "pdfkit";
 import { Op } from "sequelize";
+import { registrarActividad } from '../utils/registrarActividad.js'; // 👈 nuevo import
+
 
 // Helper DRY para el tenant
 const tenantScope = (req) => ({ organizacionId: req.user.organizacionId });
 
-
-
 // Crear un nuevo turno
 export const crearTurno = async (req, res) => {
   try {
-    const { start, end, profesionalId, pacienteId } = req.body;
+    const { start, end, profesionalId, pacienteId, profesionalDerivaId } = req.body;
     const fechaTurno = new Date(start);
 
-    // Verificar días libres a través del profesional
+    // Verificar días libres
     const diaLibre = await DiaLibre.findOne({
       where: {
         profesionalId,
@@ -28,7 +28,7 @@ export const crearTurno = async (req, res) => {
       include: [{
         model: Profesional,
         as: 'profesional',
-        where: { organizacionId: req.user.organizacionId } // <-- filtro por organización aquí
+        where: { organizacionId: req.user.organizacionId }
       }]
     });
 
@@ -42,8 +42,30 @@ export const crearTurno = async (req, res) => {
 
     const turno = await Turno.create({
       ...req.body,
+      profesionalDerivaId: profesionalDerivaId || null,
       organizacionId: req.user.organizacionId
     });
+
+    // Obtener los nombres para el log
+    const [profesional, paciente] = await Promise.all([
+      Profesional.findByPk(profesionalId),
+      Paciente.findByPk(pacienteId)
+    ]);
+
+    const nombreProfesional = profesional ? `${profesional.nombre} ${profesional.apellido}` : 'desconocido';
+    const nombrePaciente = paciente ? `${paciente.nombre} ${paciente.apellido}` : 'desconocido';
+
+    const fechaTurnoStr = fechaTurno.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
+
+    // Registrar actividad con fecha
+    await registrarActividad(
+      req.user?.id || null,
+      'CREAR_TURNO',
+      "turno",
+      turno.id,
+      `Creó un turno: ${turno.id} (profesional: ${nombreProfesional}, paciente: ${nombrePaciente}, fecha: ${fechaTurnoStr})`,
+      req.user?.organizacionId || 1
+    );
 
     res.status(201).json(turno);
   } catch (err) {
@@ -60,7 +82,8 @@ export const obtenerTurnos = async (req, res) => {
       where: tenantScope(req),
       include: [
         { model: Paciente, as: 'paciente' },
-        { model: Profesional, as: 'profesional' }
+        { model: Profesional, as: 'profesional' },
+        { model: Profesional, as: 'profesionalDeriva' } // 👈 nuevo include
       ]
     });
     res.json(turnos);
@@ -76,12 +99,12 @@ export const obtenerTurnoPorId = async (req, res) => {
       where: { id: req.params.id, ...tenantScope(req) },
       include: [
         { model: Paciente, as: 'paciente' },
-        { model: Profesional, as: 'profesional' }
+        { model: Profesional, as: 'profesional' },
+        { model: Profesional, as: 'profesionalDeriva' } // 👈 nuevo include
       ]
     });
 
     if (!turno) return res.status(404).json({ error: 'Turno no encontrado' });
-
     res.json(turno);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -103,7 +126,8 @@ export const obtenerTurnosPorPaciente = async (req, res) => {
             as: 'especialidades',
             attributes: ['id', 'nombre']
           }]
-        }
+        },
+        { model: Profesional, as: 'profesionalDeriva' } // 👈 nuevo include
       ]
     });
     res.json(turnos);
@@ -119,11 +143,9 @@ export const obtenerTurnosPorProfesional = async (req, res) => {
     const turnos = await Turno.findAll({
       where: { profesionalId, ...tenantScope(req) },
       include: [
-        { model: Paciente, as: 'paciente' },    { 
-          model: ObraSocial, 
-          as: 'obraSocial', 
-          attributes: ['nombre'] // solo traer el nombre
-        }
+        { model: Paciente, as: 'paciente' },
+        { model: ObraSocial, as: 'obraSocial', attributes: ['nombre'] },
+        { model: Profesional, as: 'profesionalDeriva' } // 👈 nuevo include
       ]
     });
     res.json(turnos);
@@ -132,28 +154,80 @@ export const obtenerTurnosPorProfesional = async (req, res) => {
   }
 };
 
+export const actualizarTurno = async (req, res) => {
+  try {
+    const turno = await Turno.findOne({ where: { id: req.params.id, ...tenantScope(req) } });
+    if (!turno) return res.status(404).json({ error: 'Turno no encontrado' });
+
+    // Guardar valores antiguos
+    const oldProfesionalId = turno.profesionalId;
+    const oldPacienteId = turno.pacienteId;
+    const oldFecha = turno.start; // fecha/hora turno
+
+    // Actualizar turno
+    await turno.update({
+      ...req.body,
+      profesionalDerivaId: req.body.profesionalDerivaId || null
+    });
+
+    // Obtener los datos para log
+    const [profesional, paciente] = await Promise.all([
+      Profesional.findByPk(turno.profesionalId),
+      Paciente.findByPk(turno.pacienteId)
+    ]);
+
+    const nombreProfesional = profesional ? `${profesional.nombre} ${profesional.apellido}` : 'desconocido';
+    const nombrePaciente = paciente ? `${paciente.nombre} ${paciente.apellido}` : 'desconocido';
+
+    const fechaTurno = turno.start ? new Date(turno.start).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'desconocida';
+    const fechaAnterior = oldFecha ? new Date(oldFecha).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) : 'desconocida';
+
+    // Log con detalle de cambios
+    await registrarActividad(
+      req.user?.id || null,
+      "MODIFICAR_TURNO",
+      "turno",
+      turno.id,
+      `Modificó el turno: ${turno.id} 
+       (profesional: ${nombreProfesional}, paciente: ${nombrePaciente}, fecha: ${fechaAnterior} → ${fechaTurno})`,
+      req.user?.organizacionId || 1
+    );
+
+    res.json(turno);
+  } catch (err) {
+    console.error("Error en actualizarTurno:", err);
+    res.status(400).json({ error: err.message });
+  }
+};
+
 // Obtener turnos por día
 export const obtenerTurnosPorDia = async (req, res) => {
   try {
     const { fecha } = req.query;
-    if (!fecha) return res.status(400).json({ error: 'Se requiere una fecha en query param' });
+    if (!fecha) {
+      return res.status(400).json({ error: 'Se requiere una fecha en el parámetro query (fecha=YYYY-MM-DD)' });
+    }
 
     const startOfDay = new Date(`${fecha}T00:00:00`);
     const endOfDay = new Date(`${fecha}T23:59:59`);
 
     const turnos = await Turno.findAll({
       where: {
-        fechaHora: { [Op.between]: [startOfDay, endOfDay] },
+        start: { [Op.between]: [startOfDay, endOfDay] },
         ...tenantScope(req)
       },
       include: [
         { model: Paciente, as: 'paciente' },
-        { model: Profesional, as: 'profesional' }
-      ]
+        { model: Profesional, as: 'profesional' },
+        { model: Profesional, as: 'profesionalDeriva' }, // 👈 soporte para derivaciones
+        { model: ObraSocial, as: 'obraSocial', attributes: ['nombre'] }
+      ],
+      order: [['start', 'ASC']]
     });
 
     res.json(turnos);
   } catch (err) {
+    console.error("Error en obtenerTurnosPorDia:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -163,7 +237,10 @@ export const obtenerTurnosPorProfesionalYDia = async (req, res) => {
   try {
     const { profesionalId } = req.params;
     const { fecha } = req.query;
-    if (!fecha) return res.status(400).json({ error: 'Se requiere fecha' });
+
+    if (!fecha) {
+      return res.status(400).json({ error: 'Se requiere el parámetro fecha (YYYY-MM-DD)' });
+    }
 
     const startOfDay = new Date(`${fecha}T00:00:00`);
     const endOfDay = new Date(`${fecha}T23:59:59`);
@@ -171,60 +248,88 @@ export const obtenerTurnosPorProfesionalYDia = async (req, res) => {
     const turnos = await Turno.findAll({
       where: {
         profesionalId,
-        fechaHora: { [Op.between]: [startOfDay, endOfDay] },
+        start: { [Op.between]: [startOfDay, endOfDay] },
         ...tenantScope(req)
       },
       include: [
         { model: Paciente, as: 'paciente' },
-        { model: Profesional, as: 'profesional' }
+        { model: Profesional, as: 'profesional' },
+        { model: Profesional, as: 'profesionalDeriva' }, // 👈 derivaciones
+        { model: ObraSocial, as: 'obraSocial', attributes: ['nombre'] } // 👈 obra social
       ],
-      order: [['fechaHora', 'ASC']]
+      order: [['start', 'ASC']]
     });
 
     res.json(turnos);
   } catch (err) {
+    console.error("Error en obtenerTurnosPorProfesionalYDia:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+// Restaurar un turno eliminado (soft delete)
+export const restaurarTurno = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Buscar turno incluso si fue eliminado (soft delete)
+    const turno = await Turno.findOne({
+      where: { id, ...tenantScope(req) },
+      paranoid: false // 👈 permite encontrar eliminados
+    });
+
+    if (!turno) {
+      return res.status(404).json({ error: 'Turno no encontrado o no pertenece a la organización' });
+    }
+
+    // Si no está eliminado, avisamos
+    if (turno.deletedAt === null) {
+      return res.status(400).json({ error: 'El turno no está eliminado' });
+    }
+
+    await turno.restore();
+
+        // ✅ Log de restauración
+  
+        await registrarActividad(
+          req.user?.id || null,
+          'RESTAURAR_TURNO',
+          "turno",
+          turno.id,
+          `restauró el turno: ${turno.id} (profesional: ${turno.profesionalId}, paciente: ${turno.pacienteId})`,
+          req.user?.organizacionId || 1
+        );
+    res.json({ message: 'Turno restaurado correctamente', turno });
+  } catch (err) {
+    console.error('Error en restaurarTurno:', err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// Actualizar un turno
-export const actualizarTurno = async (req, res) => {
-  try {
-    const turno = await Turno.findOne({ where: { id: req.params.id, ...tenantScope(req) } });
-    if (!turno) return res.status(404).json({ error: 'Turno no encontrado' });
-
-    await turno.update(req.body);
-    res.json(turno);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
 
 // Eliminar un turno
 export const eliminarTurno = async (req, res) => {
   try {
-    const turno = await Turno.findOne({ where: { id: req.params.id, ...tenantScope(req) } });
+    const { id } = req.params;
+    const turno = await Turno.findOne({ where: { id, ...tenantScope(req) } });
     if (!turno) return res.status(404).json({ error: 'Turno no encontrado' });
 
     await turno.destroy();
-    res.json({ message: 'Turno eliminado' });
+        // ✅ Log de eliminación
+
+        await registrarActividad(
+          req.user?.id || null,
+          'ELIMINAR_TURNO',
+          "turno",
+          turno.id,
+          `eliminó el turno: ${turno.id} (profesional: ${turno.profesionalId}, paciente: ${turno.pacienteId})`,
+          req.user?.organizacionId || 1
+        );
+    res.json({ message: 'Turno eliminado correctamente' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Restaurar un turno eliminado
-export const restaurarTurno = async (req, res) => {
-  try {
-    const turno = await Turno.findOne({ where: { id: req.params.id, ...tenantScope(req) }, paranoid: false });
-    if (!turno) return res.status(404).json({ error: 'Turno no encontrado' });
-
-    await turno.restore();
-    res.json({ message: 'Turno restaurado', turno });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
 
 // Generar PDF por profesional y día (mismo tenant)
 export const generarAgendaPDFPorProfesionalYDia = async (req, res) => {

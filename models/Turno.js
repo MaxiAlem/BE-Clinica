@@ -56,6 +56,10 @@ const Turno = sequelize.define('Turno', {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
+  profesionalDerivaId: { // 👈 nuevo campo agregado
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   obraSocialId: {
     type: DataTypes.INTEGER,
     allowNull: true,
@@ -90,6 +94,17 @@ Turno.associate = (models) => {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
   });
+    // Profesional que deriva
+    Turno.belongsTo(models.Profesional, {
+      foreignKey: {
+        name: 'profesionalDerivaId',
+        allowNull: true,
+      },
+      as: 'profesionalDeriva',
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE',
+    });
+ 
 
   Turno.belongsTo(models.ObraSocial, {
     foreignKey: {

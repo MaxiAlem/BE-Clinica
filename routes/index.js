@@ -8,6 +8,7 @@ import especialidadRouter from './especialidades.js';
 import metodoPagorouter from './metodosPago.js';
 import rolRouter from './rol.js';
 import facturacionRouter from './facturacion.js';
+import actividadRouter from './actividad.js';
 import { login,me } from '../controllers/authController.js';
 import { verificarToken } from '../middleware/auth.js';
 import { tenantMiddleware } from '../middleware/tenant.js';
@@ -27,6 +28,8 @@ router.use('/profesionales',verificarToken, profesionalRouter);
 router.use('/stats',verificarToken,statRouter);
 router.use('/facturas',verificarToken,facturacionRouter);
 router.use('/usuarios', verificarToken,usuarioRouter);
+
+router.use("/logs",verificarToken, actividadRouter);
 
 router.use('/metodos-pago',verificarToken, metodoPagorouter);
 
